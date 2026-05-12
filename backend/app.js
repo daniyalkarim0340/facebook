@@ -1,45 +1,73 @@
-import expres from "express";
+import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
+
 import Custommiddleware from "./authmiddleware/customerror.js";
-const app = expres();
+import authroute from "./route/route.js";
+
+const app = express();
+
 dotenv.config();
 
-const alloworigin=["http://localhost:3000","https://facebookwebsite-frontend.onrender.com/"]
-const corsOptions = (req, cb) => {
-    const origin = req.header('Origin');
+// PARSE JSON
+app.use(express.json());
 
-    const options = {
-        origin: true,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        credentials: true,
-        allowedHeaders: ['Content-Type', 'Authorization']
-    };
+// ALLOWED ORIGINS
+const alloworigin = [
+  "http://localhost:3000",
+  "https://facebookwebsite-frontend.onrender.com",
+];
 
+// CORS OPTIONS
+const corsOptions = {
+  origin: function (origin, cb) {
+    // Allow requests without origin
     if (!origin) {
-        return cb(null, options);
+      return cb(null, true);
     }
 
+    // Check allowed origins
     if (alloworigin.includes(origin)) {
-        return cb(null, options);
+      return cb(null, true);
     }
 
-    return cb(null, { origin: false });
-}
+    return cb(new Error("Not allowed by CORS"));
+  },
+
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+
+  credentials: true,
+
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+// RATE LIMITER
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-   handler: (req, res) => {      res.status(429).json({ message: 'Too many requests, please try again later.' });
-    }
+  windowMs: 15 * 60 * 1000, // 15 minutes
+
+  max: 100,
+
+  standardHeaders: true,
+
+  legacyHeaders: false,
+
+  handler: (req, res) => {
+    res.status(429).json({
+      message: "Too many requests, please try again later.",
+    });
+  },
 });
+
+// MIDDLEWARES
 app.use(limiter);
+
 app.use(cors(corsOptions));
 
+// ROUTES HERE
+app.use("/api/users",authroute);
 
-
-app.use(Custommiddleware)
+// ERROR MIDDLEWARE (LAST)
+app.use(Custommiddleware);
 
 export default app;

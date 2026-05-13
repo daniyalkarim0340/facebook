@@ -18,6 +18,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    refreshToken: {
+      token: {
+        type: String,
+      },
+
+      expires: {
+        type: Date,
+      },
+    },
   },
   {
     timestamps: true,
@@ -30,11 +40,15 @@ userSchema.pre("save", async function (next) {
     return next();
   }
 
-  const salt = await bcrypt.genSalt(10);
+  try {
+    const salt = await bcrypt.genSalt(10);
 
-  this.password = await bcrypt.hash(this.password, salt);
+    this.password = await bcrypt.hash(this.password, salt);
 
-  
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 const User = mongoose.model("User", userSchema);

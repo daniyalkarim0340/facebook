@@ -34,28 +34,48 @@ const register = asyncHandler(async (req, res, next) => {
   });
 });
 
-const Lgoinuser=asyncHandler(async(req,res,next)=>{
-    const {email,password}=req.body;
-    if(!email || !password){
-        return next(new Customerror(400,"Please fill all fields"))
-    }
-    const user=await User.findOne({email});
-    if(!user){
-        return next(new Customerror(400,"Invalid credentials"))
-    }
-    const comparepassword=await bcrypt.compare(password,user.password);
-    if(!comparepassword){
-        return next(new Customerror(400,"Invalid credentials"))
-    }
+const Loginuser = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body;
 
-   const accessToken = generateAccessToken(user._id);
+  if (!email || !password) {
+    return next(new Customerror(400, "Please fill all fields"));
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return next(new Customerror(400, "Invalid credentials"));
+  }
+
+  const comparepassword = await bcrypt.compare(
+    password,
+    user.password
+  );
+
+  if (!comparepassword) {
+    return next(new Customerror(400, "Invalid credentials"));
+  }
+
+  // TOKENS
+  const accessToken = generateAccessToken(user._id);
+
   const refreshToken = generateRefreshToken(user._id);
-    res.status(200).json({
-        success:true,
-        message:"User logged in successfully",
-        accessToken,
-        
-    })
-})
 
-export { register, Lgoinuser };
+  // SAVE REFRESH TOKEN IN DB
+  user.refreshToken = {
+    token: refreshToken,
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  };
+
+  await user.save();
+
+  // SET COOKIES
+
+  res.cookie("refreshToken", refreshToken, cookieOption);
+
+  res.status(200).json({
+    success: true,
+    message: "User logged in successfully",
+  });
+});
+export { register, Loginuser };

@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { registerUser } from "../api/user.api";
-
+import { registerUser, loginUser } from "../api/user.api";
 
 const useAuthStore = create(
   persist(
@@ -11,13 +10,13 @@ const useAuthStore = create(
       error: null,
 
       // -------------------
-      // REGISTER ACTION
+      // REGISTER
       // -------------------
       register: async (formData) => {
         try {
           set({ loading: true, error: null });
 
-          const data = await registerUser(formData); //  API call
+          const data = await registerUser(formData);
 
           set({
             user: data,
@@ -29,6 +28,37 @@ const useAuthStore = create(
             loading: false,
           });
         }
+      },
+
+      // -------------------
+      // LOGIN
+      // -------------------
+      login: async (formData) => {
+        try {
+          set({ loading: true, error: null });
+
+          const data = await loginUser(formData);
+
+          set({
+            user: data,
+            loading: false,
+          });
+        } catch (err) {
+          set({
+            error: err.message || "Invalid credentials",
+            loading: false,
+          });
+        }
+      },
+
+      // -------------------
+      // LOGOUT (important)
+      // -------------------
+      logout: () => {
+        set({
+          user: null,
+          error: null,
+        });
       },
     }),
     {

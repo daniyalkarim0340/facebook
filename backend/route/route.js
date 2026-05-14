@@ -8,9 +8,6 @@ import {
 
 const authroute = Router();
 
-// -------------------
-// AUTH ROUTES
-// -------------------
 authroute.post("/register", register);
 authroute.post("/login", loginUser);
 authroute.post("/logout", logoutUser);

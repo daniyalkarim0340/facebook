@@ -6,33 +6,36 @@ import rateLimit from "express-rate-limit";
 import Custommiddleware from "./authmiddleware/customerror.js";
 import authroute from "./route/route.js";
 
-const app = express();
-
 dotenv.config();
 
+const app = express();
+
+// --------------------
 // PARSE JSON
+// --------------------
 app.use(express.json());
 
+// --------------------
 // ALLOWED ORIGINS
+// --------------------
 const alloworigin = [
-  "http://localhost:3000",
+  "http://localhost:5173",
   "https://facebookwebsite-frontend.onrender.com",
 ];
 
-// CORS OPTIONS
+// --------------------
+// CORS CONFIG
+// --------------------
 const corsOptions = {
   origin: function (origin, cb) {
-    // Allow requests without origin
-    if (!origin) {
-      return cb(null, true);
-    }
+    // allow requests like Postman or server-to-server
+    if (!origin) return cb(null, true);
 
-    // Check allowed origins
     if (alloworigin.includes(origin)) {
       return cb(null, true);
     }
 
-    return cb(new Error("Not allowed by CORS"));
+    return cb(null, false); // block others
   },
 
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
@@ -42,14 +45,18 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
+// --------------------
+// CORS MIDDLEWARE
+// --------------------
+app.use(cors(corsOptions));
+
+// --------------------
 // RATE LIMITER
+// --------------------
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-
   max: 100,
-
   standardHeaders: true,
-
   legacyHeaders: false,
 
   handler: (req, res) => {
@@ -59,15 +66,16 @@ const limiter = rateLimit({
   },
 });
 
-// MIDDLEWARES
 app.use(limiter);
 
-app.use(cors(corsOptions));
+// --------------------
+// ROUTES
+// --------------------
+app.use("/api/users", authroute);
 
-// ROUTES HERE
-app.use("/api/users",authroute);
-
-// ERROR MIDDLEWARE (LAST)
+// --------------------
+// ERROR MIDDLEWARE
+// --------------------
 app.use(Custommiddleware);
 
 export default app;

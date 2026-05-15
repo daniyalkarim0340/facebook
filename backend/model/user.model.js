@@ -21,20 +21,27 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+ otp: {
+      type: String,
+   },
 
+   otpExpiry: {
+      type: Date,
+   },
+
+   isVerified: {
+      type: Boolean,
+      default: false,
+   },
     // -------------------
     // MULTI DEVICE REFRESH TOKENS
     // -------------------
     refreshTokens: [
-      {
-        token: String,
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-        expiresAt: Date,
-      },
-    ],
+  {
+    token: String,
+    expiresAt: Date,
+  },
+],
   },
   {
     timestamps: true,
@@ -44,26 +51,24 @@ const userSchema = new mongoose.Schema(
 // -------------------
 // HASH PASSWORD
 // -------------------
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+  console.log("Pre-save hook triggered");
+  if (!this.isModified("password")) {
+    console.log("Password not modified, skipping hash");
+    return;
+  }
 
   try {
+    console.log("Hashing password...");
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    console.log("Password hashed successfully");
   } catch (error) {
-    next(error);
+    console.log("Error hashing password:", error);
+    throw error;
   }
 });
 
-// -------------------
-// REMOVE SENSITIVE DATA
-// -------------------
-userSchema.methods.toJSON = function () {
-  const user = this.toObject();
-  delete user.password;
-  delete user.refreshTokens;
-  return user;
-};
 
 const User = mongoose.model("User", userSchema);
 

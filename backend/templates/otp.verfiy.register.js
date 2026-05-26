@@ -11,7 +11,7 @@ export const otpTemplate = (name, email, otp) => {
     ">
 
       <h2 style="color: #333;">
-        Email Verification
+        Email Verification  it is for email verfication dont share withe others
       </h2>
 
       <p style="font-size: 16px; color: #555;">

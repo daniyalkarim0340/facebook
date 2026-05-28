@@ -5,10 +5,7 @@ export const otpTemplate = (name, email, otp) => {
       max-width: 600px;
       margin: auto;
       padding: 20px;
-      border: 1px solid #e5e5e5;
-      border-radius: 10px;
-      background-color: #f9f9f9;
-    ">
+         ">
 
       <h2 style="color: #333;">
         Email Verification  it is for email verfication dont share withe others

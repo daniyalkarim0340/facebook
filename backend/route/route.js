@@ -1,11 +1,6 @@
 import { Router } from "express";
 import {
-  register,
-  loginUser,
-  logoutUser,
-  refreshAccessToken,
-  verifyOtp,
-  resendOtp,
+  register,loginUser,logoutUser,refreshAccessToken,verifyOtp,resendOtp,
 } from "../controllar/auth.controllar.js";
 
 const authroute = Router();
@@ -18,3 +13,9 @@ authroute.post("/refresh-token", refreshAccessToken);
 authroute.post("/resend-otp", resendOtp);
 
 export default authroute;
+
+
+
+
+
+

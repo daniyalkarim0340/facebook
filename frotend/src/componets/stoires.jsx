@@ -1,4 +1,3 @@
-import React from "react";
 
 const Stories = () => {
   const stories = [
@@ -34,7 +33,7 @@ const Stories = () => {
             key={story.id}
             className="bg-white rounded-2xl shadow-md p-5 hover:shadow-xl transition"
           >
-            <h2 className="text-xl font-semibold text-blue-600 mb-2">
+            <h2 className="text-xl font-semibold text-green-600 mb-2">
               {story.name}
             </h2>
             <p className="text-gray-600">{story.text}</p>

@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import app from "./app.js";
 import connectDB from "./config/db.config.js";
+import "./eventbus/index.js"
 
 const PORT = process.env.PORT || 5000;
 

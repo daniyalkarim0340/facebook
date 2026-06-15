@@ -1,7 +1,17 @@
 const cookieOption = {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000, 
     httpOnly: true,
-    secure: true,            //process.env.NODE_ENV === 'production', // set secure flag in production
-    sameSite: 'none' // prevent CSRF attackss
+    secure: true,           
+    sameSite: 'none'
 }
 export { cookieOption }
+
+
+
+
+
+
+
+
+
+

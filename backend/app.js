@@ -5,6 +5,9 @@ import rateLimit from "express-rate-limit";
 
 import Custommiddleware from "./authmiddleware/customerror.js";
 import authroute from "./route/route.js";
+import Airouter from "./route/ai.route.js";
+import aurouter from "./route/voice.route.js";
+import imageRoutes from "./route/image.routes.js";
 
 dotenv.config();
 
@@ -72,7 +75,9 @@ app.use(limiter);
 // ROUTES
 // --------------------
 app.use("/api/users", authroute);
-
+app.use("/api/ai", Airouter);
+app.use("/api/image", imageRoutes);
+// app.use("/api/transcribe", aurouter);
 // --------------------
 // ERROR MIDDLEWARE
 // --------------------

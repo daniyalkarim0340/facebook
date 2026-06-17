@@ -32,7 +32,8 @@ const useChatStore = create(
         { id: 'mixtral-8x7b-32768', name: '🔀 Mixtral 8x7B (Expert)', provider: 'Groq', speed: 'Fast' },
         { id: 'openai/gpt-oss-20b', name: '🚀 GPT-OSS 20B (Efficient)', provider: 'Groq', speed: 'Very Fast' },
         { id: 'qwen/qwen3-32b', name: '🐉 Qwen3 32B (Multilingual)', provider: 'Groq', speed: 'Fast' },
-        { id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: '👁️ Llama 4 Scout (Agentic)', provider: 'Groq', speed: 'Very Fast' }
+        { id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: '👁️ Llama 4 Scout (Agentic)', provider: 'Groq', speed: 'Very Fast' },
+        { id: 'gemma3:4b', name: '💎 Gemma 3 4B (Local)', provider: 'Ollama', speed: 'Very Fast' } // Added local Gemma model here
       ],
       
       setSelectedModel: (model) => set({ selectedModel: model }),
@@ -242,4 +243,4 @@ const useChatStore = create(
   )
 );
 
-export default useChatStore; 
+export default useChatStore;

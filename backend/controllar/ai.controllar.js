@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { Groq } from 'groq-sdk';
 import { tavily } from '@tavily/core';
+import ollama from 'ollama'; // 1. Added local Ollama import
 import { ChatSession } from '../model/ai.model.js';
 import asyncHandler from "express-async-handler";
 import CustomError from "../handler/customerror.js";
@@ -19,7 +20,8 @@ const AVAILABLE_MODELS = {
     'mixtral-8x7b-32768': { name: 'Mixtral 8x7B (Expert MoE)', maxTokens: 1024 },
     'openai/gpt-oss-20b': { name: 'GPT-OSS 20B (High Speed & Efficiency)', maxTokens: 1024 },
     'qwen/qwen3-32b': { name: 'Qwen3 32B (Strong Multilingual/Code)', maxTokens: 1024 },
-    'meta-llama/llama-4-scout-17b-16e-instruct': { name: 'Llama 4 Scout (Next-Gen Agentic)', maxTokens: 1024 }
+    'meta-llama/llama-4-scout-17b-16e-instruct': { name: 'Llama 4 Scout (Next-Gen Agentic)', maxTokens: 1024 },
+    'gemma3:4b': { name: 'Gemma 3 4B (Local Instance via Ollama)', maxTokens: 2048 } // 2. Added Gemma 3 4B here
 };
 
 // Defaults
@@ -156,15 +158,29 @@ export const handleAgentChat = asyncHandler(async (req, res, next) => {
 
     const trackingTool = needsSearch ? 'Tavily Web Search' : 'Internal Base Engine';
 
-    // 7. Complete Core Engine Inference Run with selected model
-    const chatCompletion = await groq.chat.completions.create({
-        model: selectedModel,
-        messages: messagesPayload,
-        temperature: 0.4,
-        max_tokens: modelConfig.maxTokens
-    });
+    // 7. Complete Core Engine Inference Run with conditional routing
+    let botResponse;
 
-    const botResponse = chatCompletion.choices[0].message.content;
+    if (selectedModel === 'gemma3:4b') {
+        // 3. Routing Execution Engine locally via Ollama SDK
+        const localCompletion = await ollama.chat({
+            model: 'gemma3:4b',
+            messages: messagesPayload,
+            options: {
+                temperature: 0.4
+            }
+        });
+        botResponse = localCompletion.message.content;
+    } else {
+        // 4. Default cloud execution engine route using Groq SDK
+        const chatCompletion = await groq.chat.completions.create({
+            model: selectedModel,
+            messages: messagesPayload,
+            temperature: 0.4,
+            max_tokens: modelConfig.maxTokens
+        });
+        botResponse = chatCompletion.choices[0].message.content;
+    }
 
     // 8. Sync & Commit Aggregated Dialogue Thread Context to MongoDB Database
     session.messages.push({ role: 'user', content: message });

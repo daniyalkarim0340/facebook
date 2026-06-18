@@ -39,3 +39,7 @@
 .delay-400 { animation-delay: 400ms; }
 .delay-500 { animation-delay: 500ms; }
 .delay-700 { animation-delay: 700ms; }
+
+.perspective-1000 {
+  perspective: 1000px;
+}

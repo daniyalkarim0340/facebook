@@ -21,13 +21,7 @@ const AppRoutes = () => {
       <Route path="/verify-otp" element={<VerifyOtpPage />} />
 
       {/* HOME */}
-      <Route path="/" element={
-    
-          <MainLayout>
-           <HomePortal/>
-          </MainLayout>
-       
-      } />
+      <Route path="/" element={<HomePortal />} />
       <Route
         path="/ai"
         element={

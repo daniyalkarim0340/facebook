@@ -40,6 +40,7 @@ export default function ChatDashboard() {
   const {
     history, messages, currentSessionId, loading, agentStatus,
     selectedModel, availableModels, setSelectedModel,
+    selectedAgent, availableAgents, setSelectedAgent,
     fetchHistoryList, fetchSessionMessages, handleNewChat,
     sendMessage, editMessage, deleteSession, generateAiImage,
   } = useChatStore();
@@ -112,6 +113,9 @@ export default function ChatDashboard() {
   }, []);
 
   useEffect(() => { fetchHistoryList(); }, []);
+  useEffect(() => {
+    useChatStore.getState().fetchAvailableAgents();
+  }, []);
   useEffect(() => {
     if (currentSessionId) fetchSessionMessages(currentSessionId);
   }, [currentSessionId]);
@@ -268,6 +272,9 @@ export default function ChatDashboard() {
           showModelSelector={showModelSelector}
           availableModels={availableModels}
           selectedModel={selectedModel}
+          availableAgents={availableAgents}
+          selectedAgent={selectedAgent}
+          onSelectAgent={setSelectedAgent}
           onInputChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {

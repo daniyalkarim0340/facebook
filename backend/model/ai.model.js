@@ -14,6 +14,18 @@ const MessageSchema = new mongoose.Schema({
         type: String,
         default: 'None'
     },
+    agentUsed: {
+        type: String,
+        default: null
+    },
+    agentsPipeline: {
+        type: [String],
+        default: []
+    },
+    model: {
+        type: String,
+        default: null
+    },
     timestamp: {
         type: Date,
         default: Date.now

@@ -12,14 +12,17 @@ export default function ChatInputBar({
   showModelSelector,
   availableModels,
   selectedModel,
+  availableAgents = [],
+  selectedAgent,
   onInputChange,
   onKeyDown,
   onSubmit,
   onToggleModelSelector,
   onSelectModel,
+  onSelectAgent,
   onVoiceTranscribe,
 }) {
-  const selectedName = availableModels.find((m) => m.id === selectedModel)?.name.split('(')[0].trim() || 'Sonnet 3.5';
+  const selectedName = availableModels.find((m) => m.id === selectedModel)?.name.split('(')[0].trim() || 'Llama 3.3';
 
   return (
     <motion.div
@@ -73,6 +76,25 @@ export default function ChatInputBar({
               </motion.button>
 
               <VoiceRecorder onTranscribe={onVoiceTranscribe} disabled={loading} />
+
+              {availableAgents.length > 0 && (
+                <select
+                  value={selectedAgent || ''}
+                  onChange={(e) => onSelectAgent?.(e.target.value || null)}
+                  disabled={loading}
+                  className={`px-2 py-1 rounded-lg border text-[10px] font-semibold max-w-[110px] truncate ${
+                    darkMode
+                      ? 'border-zinc-800 bg-zinc-900 text-zinc-400'
+                      : 'border-zinc-200 bg-white text-zinc-600'
+                  }`}
+                  title="Force a specialist agent (Auto = Router decides)"
+                >
+                  <option value="">🔀 Auto Agent</option>
+                  {availableAgents.map((a) => (
+                    <option key={a.id} value={a.id}>{a.icon} {a.name}</option>
+                  ))}
+                </select>
+              )}
 
               <div className="relative ml-1" ref={modelSelectorRef}>
                 <motion.button

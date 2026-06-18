@@ -1,6 +1,18 @@
 import api from "./axios.instance";
 
 // -------------------
+// GET AVAILABLE AGENTS
+// -------------------
+export const getAvailableAgents = async () => {
+  try {
+    const response = await api.get("/ai/agents");
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error("Network Error");
+  }
+};
+
+// -------------------
 // SEND CHAT MESSAGE (Core AI Agent Engine)
 // -------------------
 export const handleAgentChat = async (chatData) => {

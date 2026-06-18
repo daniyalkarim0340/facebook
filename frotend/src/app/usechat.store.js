@@ -14,17 +14,18 @@ const useChatStore = create(
       messages: [
         {
           role: 'assistant',
-          content: "Welcome to your elite AI workspace. I am optimized with live web capabilities to execute deep research, analyze markets, and answer complex queries in real time.",
-          toolUsed: 'Internal Base Engine'
+          content: "Welcome to Scholarly AI Multi-Agent Workspace. I route your questions to specialist agents — Research, Code, Writer, Analyst — for ChatGPT-level answers with live web search when needed.",
+          toolUsed: 'Multi-Agent Orchestrator'
         }
       ],
       currentSessionId: null,
       loading: false,
       agentStatus: 'Idle',
       error: null,
-      selectedModel: 'llama-3.3-70b-versatile', // Default model
-      
-      // Available models for user selection (Updated with new open-source models)
+      selectedModel: 'llama-3.3-70b-versatile',
+      selectedAgent: null,
+      availableAgents: [],
+
       availableModels: [
         { id: 'llama-3.3-70b-versatile', name: '🦙 Llama 3.3 70B (Powerful)', provider: 'Groq', speed: 'Fast' },
         { id: 'llama-3.1-8b-instant', name: '⚡ Llama 3.1 8B (Fast)', provider: 'Groq', speed: 'Very Fast' },
@@ -35,6 +36,19 @@ const useChatStore = create(
       ],
       
       setSelectedModel: (model) => set({ selectedModel: model }),
+      setSelectedAgent: (agent) => set({ selectedAgent: agent }),
+
+      fetchAvailableAgents: async () => {
+        try {
+          const { getAvailableAgents } = await import('../api/ai.js');
+          const data = await getAvailableAgents();
+          if (data.status === 'success') {
+            set({ availableAgents: data.data?.agents || [] });
+          }
+        } catch (err) {
+          console.error('Failed to load agents:', err);
+        }
+      },
 
       // -------------------
       // 1. FETCH ACTIVE SESSION'S HISTORICAL MESSAGES
@@ -108,23 +122,34 @@ const useChatStore = create(
 
         set({ 
           loading: true, 
-          agentStatus: 'Evaluating Data Requirements...',
+          agentStatus: 'Router Agent: analyzing request...',
           messages: [...get().messages, { role: 'user', content: userPrompt }]
         });
 
         try {
-          setTimeout(() => {
-            if (get().loading) set({ agentStatus: 'Orchestrating Live Web Queries...' });
-          }, 800);
+          const statusTimers = [
+            setTimeout(() => {
+              if (get().loading) set({ agentStatus: 'Research Agent: gathering context...' });
+            }, 1200),
+            setTimeout(() => {
+              if (get().loading) set({ agentStatus: 'Specialist Agent: composing response...' });
+            }, 2800),
+          ];
 
           const data = await handleAgentChat({
             message: userPrompt,
             sessionId: get().currentSessionId,
-            model: get().selectedModel // Pass selected model to backend
+            model: get().selectedModel,
+            agent: get().selectedAgent,
           });
+
+          statusTimers.forEach(clearTimeout);
 
           if (data.status === 'success' || data.success) {
             const incomingSessionId = data.sessionId || data.data?.sessionId;
+            const agentLabel = data.data?.agentName
+              ? `${data.data.agentIcon || '🤖'} ${data.data.agentName}`
+              : (data.data?.toolExecuted || 'Multi-Agent Pipeline');
             
             set((state) => ({
               currentSessionId: incomingSessionId,
@@ -133,7 +158,9 @@ const useChatStore = create(
                 {
                   role: 'assistant',
                   content: data.data?.response || data.response,
-                  toolUsed: data.data?.toolExecuted || data.toolExecuted || 'Llama Core Pipeline'
+                  toolUsed: data.data?.toolExecuted || data.toolExecuted || agentLabel,
+                  agentUsed: data.data?.agentUsed,
+                  agentsPipeline: data.data?.agentsPipeline,
                 }
               ]
             }));

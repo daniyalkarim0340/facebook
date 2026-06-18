@@ -51,6 +51,7 @@ export default function ChatDashboard() {
     ? agentStatus
     : 'Composing response...';
 
+  // Track window resizing for sidebar behavior
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -60,6 +61,7 @@ export default function ChatDashboard() {
     return () => window.removeEventListener('resize', handleResize);
   }, [sidebarOpen]);
 
+  // Synchronize layout styling with dark/light themes
   useEffect(() => {
     try {
       const root = window.document.documentElement;
@@ -75,6 +77,7 @@ export default function ChatDashboard() {
     }
   }, [darkMode]);
 
+  // Handle auto-resizing text input bar
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -82,6 +85,7 @@ export default function ChatDashboard() {
     }
   }, [inputMessage]);
 
+  // Handle automated scrolling to bottom on incoming messages
   useEffect(() => {
     const scrollToBottom = () => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -92,6 +96,7 @@ export default function ChatDashboard() {
     return () => clearTimeout(t);
   }, [messages, loading]);
 
+  // Handle focus behavior on inline message editing
   useEffect(() => {
     if (editingIndex !== null && editInputRef.current) {
       editInputRef.current.focus();
@@ -102,6 +107,7 @@ export default function ChatDashboard() {
     }
   }, [editingIndex]);
 
+  // Close custom model select menus on outside mouse click patterns
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (modelSelectorRef.current && !modelSelectorRef.current.contains(e.target)) {
@@ -112,6 +118,7 @@ export default function ChatDashboard() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Fetch initial system and history states
   useEffect(() => { fetchHistoryList(); }, []);
   useEffect(() => {
     useChatStore.getState().fetchAvailableAgents();
@@ -120,6 +127,7 @@ export default function ChatDashboard() {
     if (currentSessionId) fetchSessionMessages(currentSessionId);
   }, [currentSessionId]);
 
+  // Message dispatcher
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (!inputMessage.trim() || loading) return;
@@ -136,6 +144,7 @@ export default function ChatDashboard() {
     setInputMessage('');
   };
 
+  // Text clipboard copy helper
   const handleCopyText = async (text, index) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -146,6 +155,7 @@ export default function ChatDashboard() {
     }
   };
 
+  // Codeblock clipboard copy helper
   const handleCopyCodeBlock = async (code, blockId) => {
     try {
       await navigator.clipboard.writeText(code);
@@ -156,6 +166,7 @@ export default function ChatDashboard() {
     }
   };
 
+  // Save changes from an inline edited message
   const handleSaveEdit = (index) => {
     if (!editingText.trim() || editingText.trim() === messages[index].content) {
       setEditingIndex(null);
@@ -166,6 +177,7 @@ export default function ChatDashboard() {
     setEditingIndex(null);
   };
 
+  // Trigger download prompts for generation models
   const handleDownloadImage = (base64Url) => {
     const link = document.createElement('a');
     link.href = base64Url;
@@ -175,6 +187,7 @@ export default function ChatDashboard() {
     document.body.removeChild(link);
   };
 
+  // Handle active LLM switching behaviors
   const handleSelectModel = (modelId) => {
     setSelectedModel(modelId);
     handleNewChat();
@@ -182,11 +195,15 @@ export default function ChatDashboard() {
   };
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden font-sans antialiased transition-colors duration-500 ${
+    <div className={`flex h-screen w-screen overflow-hidden font-sans antialiased transition-colors duration-500 relative ${
       darkMode ? 'bg-[#09090b] text-zinc-100' : 'bg-[#f4f4f5] text-zinc-900'
     }`}>
+      {/* Ethereal Physics-driven canvas element. 
+        Will auto-detect the darkMode variable and switch styles effortlessly.
+      */}
       <ChatBackground darkMode={darkMode} />
 
+      {/* Mobile Drawer Overlay Layer */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -202,6 +219,7 @@ export default function ChatDashboard() {
         )}
       </AnimatePresence>
 
+      {/* System Sidebar Module */}
       <ChatSidebar
         darkMode={darkMode}
         sidebarOpen={sidebarOpen}
@@ -215,6 +233,7 @@ export default function ChatDashboard() {
         onLogout={logout}
       />
 
+      {/* Primary Dashboard Container */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
         <ChatHeader
           darkMode={darkMode}
@@ -224,6 +243,7 @@ export default function ChatDashboard() {
           onToggleTheme={() => setDarkMode(!darkMode)}
         />
 
+        {/* Scrollable Chat History Field */}
         <main className="flex-1 min-h-0 overflow-y-auto w-full px-4 sm:px-6 lg:px-8 xl:px-16 flex justify-center scroll-smooth">
           <div className="w-full max-w-4xl xl:max-w-5xl flex flex-col">
             <AnimatePresence mode="wait">
@@ -263,6 +283,7 @@ export default function ChatDashboard() {
           </div>
         </main>
 
+        {/* Floating Input and Execution Toolbar Module */}
         <ChatInputBar
           darkMode={darkMode}
           loading={loading}

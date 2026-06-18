@@ -27,9 +27,7 @@ const useChatStore = create(
       // Available models for user selection (Updated with new open-source models)
       availableModels: [
         { id: 'llama-3.3-70b-versatile', name: '🦙 Llama 3.3 70B (Powerful)', provider: 'Groq', speed: 'Fast' },
-        { id: 'llama-3.1-70b-versatile', name: '🦙 Llama 3.1 70B (Balanced)', provider: 'Groq', speed: 'Fast' },
         { id: 'llama-3.1-8b-instant', name: '⚡ Llama 3.1 8B (Fast)', provider: 'Groq', speed: 'Very Fast' },
-        { id: 'mixtral-8x7b-32768', name: '🔀 Mixtral 8x7B (Expert)', provider: 'Groq', speed: 'Fast' },
         { id: 'openai/gpt-oss-20b', name: '🚀 GPT-OSS 20B (Efficient)', provider: 'Groq', speed: 'Very Fast' },
         { id: 'qwen/qwen3-32b', name: '🐉 Qwen3 32B (Multilingual)', provider: 'Groq', speed: 'Fast' },
         { id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: '👁️ Llama 4 Scout (Agentic)', provider: 'Groq', speed: 'Very Fast' },

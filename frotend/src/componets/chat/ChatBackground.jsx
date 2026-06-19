@@ -1,143 +1,143 @@
 import { useEffect, useRef } from "react";
 
-export default function ChatBackground({ darkMode }) {
+export default function ChatBackground({ darkMode, mode = "flow" }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
 
-    let animationFrameId;
+    let raf;
     let particles = [];
     let time = 0;
-    
-    // Engineering Parameters
-    const particleCount = 160; 
-    const flowScale = 0.0025;   
-    const globalFriction = 0.96; 
 
-    const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      ctx.scale(dpr, dpr);
-      
-      if (particles.length === 0) {
-        initSimulation();
-      }
-    };
-
-    const initSimulation = () => {
-      particles = [];
+    const init = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
 
-      for (let i = 0; i < particleCount; i++) {
+      particles = [];
+
+      const count =
+        mode === "stars" ? 120 :
+        mode === "rain" ? 180 :
+        mode === "words" ? 80 :
+        160;
+
+      for (let i = 0; i < count; i++) {
         particles.push({
           x: Math.random() * w,
           y: Math.random() * h,
           vx: 0,
           vy: 0,
-          speed: Math.random() * 0.7 + 0.5,
-          life: Math.random() * 150 + 100, 
-          maxLife: 250,
-          // 220 = Electric Cyan/Blue, 260 = Royal Purple/Amethyst
-          hue: Math.random() > 0.5 ? 220 : 260 
+          size: Math.random() * 2 + 1,
+          speed: Math.random() * 1 + 0.5,
+          hue: Math.random() > 0.5 ? 200 : 280,
+          text: ["AI","CODE","CHAT","DATA","FLOW"][Math.floor(Math.random()*5)],
         });
       }
     };
 
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      init();
+    };
+
+    window.addEventListener("resize", resize);
+    resize();
 
     const render = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
 
-      // 1. BALANCE CONTRAST ACCUMULATION BUFFER
-      if (darkMode) {
-        ctx.fillStyle = "rgba(9, 9, 11, 0.06)"; // Ethereal dark decay
-      } else {
-        ctx.fillStyle = "rgba(244, 244, 245, 0.14)"; // Clean ink absorption on light paper
-      }
+      // fade background
+      ctx.fillStyle = darkMode
+        ? "rgba(10,10,15,0.08)"
+        : "rgba(245,245,250,0.12)";
       ctx.fillRect(0, 0, w, h);
 
-      time += 0.0015; 
+      time += 0.01;
 
       particles.forEach((p) => {
-        // Multi-layered fluid equations
-        const angle = 
-          Math.sin(p.x * flowScale + time) * Math.PI * 2 + 
-          Math.cos(p.y * flowScale - time) * Math.PI * 1.5;
 
-        const forceX = Math.cos(angle) * p.speed;
-        const forceY = Math.sin(angle) * p.speed;
+        // 🌊 FLOW MODE (your original)
+        if (mode === "flow") {
+          const angle =
+            Math.sin(p.x * 0.002 + time) +
+            Math.cos(p.y * 0.002 - time);
 
-        p.vx += forceX * 0.15;
-        p.vy += forceY * 0.15;
-        p.vx *= globalFriction;
-        p.vy *= globalFriction;
+          p.vx += Math.cos(angle) * 0.3;
+          p.vy += Math.sin(angle) * 0.3;
+          p.vx *= 0.96;
+          p.vy *= 0.96;
+        }
+
+        // 🌧️ RAIN MODE
+        if (mode === "rain") {
+          p.vy += 0.2;
+        }
+
+        // ✨ STARS MODE
+        if (mode === "stars") {
+          p.x += (p.x - w / 2) * 0.0005;
+          p.y += (p.y - h / 2) * 0.0005;
+        }
+
+        // 📜 WORD MODE
+        if (mode === "words") {
+          p.y += 1.2;
+        }
+
         p.x += p.vx;
         p.y += p.vy;
 
-        p.life--;
-
-        // Systemic recycling loop
-        if (p.life <= 0 || p.x < 0 || p.x > w || p.y < 0 || p.y > h) {
+        // reset
+        if (p.x < 0 || p.x > w || p.y > h || p.y < 0) {
           p.x = Math.random() * w;
-          p.y = Math.random() * h;
+          p.y = mode === "rain" ? -10 : Math.random() * h;
           p.vx = 0;
           p.vy = 0;
-          p.life = Math.random() * 150 + 100;
         }
 
-        // 2. HARDWARE VECTOR DRAW WITH DYNAMIC VISIBILITY WEIGHTS
+        // DRAW
         ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x - p.vx * 2, p.y - p.vy * 2);
 
-        const alphaRatio = Math.sin((p.life / p.maxLife) * Math.PI);
-        
-        if (darkMode) {
-          // Dark Mode: Glowing luminescent neon vectors
-          ctx.strokeStyle = `hsla(${p.hue}, 95%, 65%, ${alphaRatio * 0.22})`;
-          ctx.lineWidth = 1.2;
+        if (mode === "words") {
+          ctx.fillStyle = `rgba(0,200,255,0.6)`;
+          ctx.font = "12px monospace";
+          ctx.fillText(p.text, p.x, p.y);
         } else {
-          // Light Mode: High-contrast, executive deep indigo and velvet lines
-          // Dropped lightness to 35% and cranked opacity up to 0.45x for crystal-clear visibility
-          ctx.strokeStyle = `hsla(${p.hue + 15}, 90%, 35%, ${alphaRatio * 0.45})`;
-          ctx.lineWidth = 1.6; // Slightly thicker lines to pierce light mode brightness
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = darkMode
+            ? `rgba(0,200,255,0.5)`
+            : `rgba(80,100,255,0.4)`;
+          ctx.fill();
         }
-
-        ctx.stroke();
       });
 
-      animationFrameId = requestAnimationFrame(render);
+      raf = requestAnimationFrame(render);
     };
 
     render();
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener("resize", resizeCanvas);
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
     };
-  }, [darkMode]);
+  }, [darkMode, mode]);
 
   return (
     <canvas
       ref={canvasRef}
       style={{
         position: "fixed",
-        top: 0,
-        left: 0,
+        inset: 0,
         width: "100vw",
         height: "100vh",
-        pointerEvents: "none",
         zIndex: 0,
-        display: "block"
+        pointerEvents: "none",
       }}
     />
   );

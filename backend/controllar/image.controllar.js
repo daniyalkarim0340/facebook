@@ -1,8 +1,8 @@
 import fetch from 'node-fetch';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase.js'; // Import your storage config
-import asyncHandler from '../middleware/asyncHandler.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
+import asyncHandler from "express-async-handler";
+import CustomError from "../handler/customerror.js";
 
 const HF_TOKEN = process.env.HF_TOKEN;
 
@@ -14,7 +14,7 @@ export const generateImage = asyncHandler(async (req, res, next) => {
   const { prompt } = req.body;
 
   if (!prompt) {
-    return next(new ErrorResponse('Prompt field is required', 400));
+    return next(new CustomError('Prompt field is required', 400));
   }
 
   // 1. Fetch the image from Hugging Face
@@ -28,11 +28,11 @@ export const generateImage = asyncHandler(async (req, res, next) => {
   );
 
   if (response.status === 503) {
-    return next(new ErrorResponse('Model is loading. Please retry in a few seconds.', 503));
+    return next(new CustomError('Model is loading. Please retry in a few seconds.', 503));
   }
 
   if (!response.ok) {
-    return next(new ErrorResponse(`Hugging Face error: ${response.statusText}`, response.status));
+    return next(new CustomError(`Hugging Face error: ${response.statusText}`, response.status));
   }
 
   const arrayBuffer = await response.arrayBuffer();
@@ -63,7 +63,7 @@ export const generateImage = asyncHandler(async (req, res, next) => {
  */
 export const understandImage = asyncHandler(async (req, res, next) => {
   if (!req.file) {
-    return next(new ErrorResponse('Please upload an image file', 400));
+    return next(new CustomError('Please upload an image file', 400));
   }
 
   // Send directly to Hugging Face for analysis 
@@ -77,7 +77,7 @@ export const understandImage = asyncHandler(async (req, res, next) => {
   );
 
   if (!response.ok) {
-    return next(new ErrorResponse(`Hugging Face error: ${response.statusText}`, response.status));
+    return next(new CustomError(`Hugging Face error: ${response.statusText}`, response.status));
   }
 
   const result = await response.json();

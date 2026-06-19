@@ -1,10 +1,10 @@
-class Customerror extends Error{
+class CustomError extends Error{
 constructor(statuscode , message){
 super(message);
 this.statuscode=statuscode;
 }  
 }
-export default Customerror;
+export default CustomError;
 
 
 

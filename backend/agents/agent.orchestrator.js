@@ -4,16 +4,8 @@ import { optimizeSearchQuery, runWebSearch } from './tools/webSearch.tool.js';
 import { AGENTS, AGENT_IDS, AVAILABLE_MODELS, DEFAULT_MODEL } from './agent.config.js';
 import { executeImageGeneration } from '../controllar/image.controllar.js';
 
-// 🟩 IMPORT THE NEW HELPER FROM YOUR IMAGE CONTROLLER FILE
-// (Make sure this relative file path points exactly to your image controller location)
-
-
 /**
- * Multi-Agent Pipeline:
- * 1. Router Agent → classifies intent
- * 2. Image Interceptor Agent (Intercepts visual requests)
- * 3. Research Agent (optional) → web search tool
- * 4. Specialist Agent → generates final response
+ * Multi-Agent Pipeline
  */
 export async function runMultiAgentPipeline({
   message,
@@ -31,34 +23,33 @@ export async function runMultiAgentPipeline({
 
   const route = await routeToAgent(message, history, forcedAgent);
 
-  // ── 🟩 NEW STEP: Image Generation Interception ──────────────────
+  // ── 🟩 FIXED: Image Generation Interception ──────────────────
+  // Use AGENT_IDS.IMAGE (which is 'image') instead of hardcoded 'IMAGE_AGENT'
   const triggerWords = ['generate an image', 'generate image', 'make an image', 'make a image', 'draw an image', 'draw a image', 'create an image'];
-  const isImageRequest = route.primaryAgent === 'IMAGE_AGENT' || 
+  const isImageRequest = route.primaryAgent === AGENT_IDS.IMAGE || 
                          triggerWords.some(word => message.toLowerCase().includes(word));
 
   if (isImageRequest) {
     onStatus?.('Image Agent: generating your visual asset...');
-    pipeline.push({ step: 2, agent: 'IMAGE_AGENT', status: 'running' });
+    pipeline.push({ step: 2, agent: AGENT_IDS.IMAGE, status: 'running' });
 
     try {
-      // 🚀 Clean up the trigger phrase from the text so it feeds a beautiful prompt to FLUX
       let cleanPrompt = message;
       triggerWords.forEach(word => {
         cleanPrompt = cleanPrompt.replace(new RegExp(word, 'gi'), '');
       });
-      cleanPrompt = cleanPrompt.replace(/for/i, '').trim(); // Cleans up leftover "for a dog" -> "a dog"
+      cleanPrompt = cleanPrompt.replace(/for/i, '').trim();
 
-      // Call the helper engine to get the hosted Cloudinary asset URL
       const imageUrl = await executeImageGeneration(cleanPrompt || message);
 
       pipeline[pipeline.length - 1].status = 'completed';
 
       return {
         response: imageUrl, 
-        primaryAgent: 'IMAGE_AGENT',
+        primaryAgent: AGENT_IDS.IMAGE,
         agentsPipeline: pipeline.map((p) => p.agent),
         toolExecuted: 'Pollinations FLUX Engine via Cloudinary Stream',
-        isImage: true, // 🌟 Handled by ChatMessage.jsx frontend updates!
+        isImage: true, 
         agentMeta: {
           route,
           model: 'flux-pollinations',
@@ -67,7 +58,6 @@ export async function runMultiAgentPipeline({
     } catch (error) {
       console.error("Image Pipeline interception failed:", error);
       pipeline[pipeline.length - 1].status = 'failed';
-      // System safely falls through to normal text generation if image fails
     }
   }
 

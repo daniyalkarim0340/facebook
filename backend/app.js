@@ -5,6 +5,7 @@ import rateLimit from "express-rate-limit";
 import Custommiddleware from "./authmiddleware/customerror.js";
 import authroute from "./route/route.js";
 import Airouter from "./route/ai.route.js";
+import ImageRouter from "./route/image.route.js";
 
 dotenv.config();
 
@@ -71,6 +72,7 @@ app.use(limiter);
 // --------------------
 // ROUTES
 // --------------------
+app.use("/api/image", ImageRouter);
 app.use("/api/users", authroute);
 app.use("/api/ai", Airouter);
 

@@ -40,10 +40,11 @@ export const handleAgentChat = asyncHandler(async (req, res, next) => {
   const agentInfo = AGENTS[result.primaryAgent];
   const modelName = AVAILABLE_MODELS[result.agentMeta?.model]?.name || model;
 
-  session.messages.push({ role: 'user', content: message.trim() });
+ session.messages.push({ role: 'user', content: message.trim() });
   session.messages.push({
     role: 'assistant',
     content: result.response,
+    isImage: result.isImage || false, // 🟩 ADD THIS LINE so MongoDB tracks it as an image asset
     toolUsed: result.toolExecuted,
     agentUsed: result.primaryAgent,
     agentsPipeline: result.agentsPipeline,

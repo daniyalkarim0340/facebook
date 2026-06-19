@@ -17,6 +17,7 @@ export const AGENT_IDS = {
   WRITER: 'writer',
   ANALYST: 'analyst',
   GENERAL: 'general',
+  IMAGE: 'image',
 };
 
 export const AGENTS = {
@@ -308,6 +309,15 @@ Before formulating your response, process the query through these steps:
 OUTPUT FORMATTING PROTOCOL:
 - Deliver your answer directly and cleanly. Avoid generic conversational meta-text like "Sure, I can help you with that!" or "Here is the information you requested."
 - Use clean text layout structures for readability, ensuring headers and lists separate distinct concepts clearly.`,
+  },
+  [AGENT_IDS.IMAGE]: {
+    id: AGENT_IDS.IMAGE,
+    name: 'Image Agent',
+    description: 'Generates visual images, art, and pictures from text prompts.',
+    icon: '🎨',
+    role: 'specialist',
+    systemPrompt: `You are the Image Agent. You are responsible for generating high-quality visual assets. 
+When the orchestrator routes a request to you, focus on creating detailed, vivid, and optimized prompts to be used for image synthesis.`,
   },
 };
 

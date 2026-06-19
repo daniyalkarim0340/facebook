@@ -24,6 +24,7 @@ export default function ChatSidebar({
         darkMode ? 'bg-[#121215] border-zinc-800/80' : 'bg-white border-zinc-200/80'
       }`}
     >
+      {/* Header section wrapper */}
       <motion.div
         variants={slideFromLeft(0.1)}
         initial="hidden"
@@ -44,6 +45,7 @@ export default function ChatSidebar({
           </span>
         </div>
         <motion.button
+          type="button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onClose}
@@ -55,6 +57,7 @@ export default function ChatSidebar({
         </motion.button>
       </motion.div>
 
+      {/* Action panel container */}
       <motion.div
         variants={slideFromLeft(0.2)}
         initial="hidden"
@@ -62,6 +65,7 @@ export default function ChatSidebar({
         className="p-4"
       >
         <motion.button
+          type="button"
           whileHover={{ scale: 1.02, y: -1 }}
           whileTap={{ scale: 0.98 }}
           onClick={onNewChat}
@@ -76,6 +80,7 @@ export default function ChatSidebar({
         </motion.button>
       </motion.div>
 
+      {/* History Feed Stream Area */}
       <motion.div
         variants={staggerContainer(0.08, 0.25)}
         initial="hidden"
@@ -88,41 +93,50 @@ export default function ChatSidebar({
           </motion.div>
         ) : (
           history.map((chat, i) => (
-            <motion.button
+            // 🟩 FIX: Swapped outer button structure to an animated layout div wrapper
+            <motion.div
               key={chat._id}
               variants={slideFromLeft(i * 0.04)}
               whileHover={{ x: 4, transition: { delay: 0.05 } }}
-              onClick={() => {
-                useChatStore.setState({ currentSessionId: chat._id });
-                onClose();
-              }}
-              className={`w-full text-left px-3 py-3 rounded-xl group flex items-center justify-between text-sm truncate transition-all ${
+              className={`w-full group flex items-center justify-between rounded-xl text-sm transition-all ${
                 currentSessionId === chat._id
                   ? (darkMode ? 'bg-zinc-800 text-white font-semibold' : 'bg-zinc-100 text-zinc-950 font-semibold')
                   : (darkMode ? 'text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900')
               }`}
             >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
+              {/* Isolated Chat Session Selector Click Target */}
+              <button
+                type="button"
+                onClick={() => {
+                  useChatStore.setState({ currentSessionId: chat._id });
+                  onClose();
+                }}
+                className="flex-1 min-w-0 flex items-center gap-3 px-3 py-3 text-left"
+              >
                 <MessageSquare className={`w-4 h-4 flex-shrink-0 transition-colors ${
                   currentSessionId === chat._id ? 'text-amber-500' : 'text-zinc-400'
                 }`} />
                 <span className="truncate text-xs tracking-wide">{chat.title || 'Untitled Session'}</span>
-              </div>
+              </button>
+
+              {/* Delete Mutation Option Trigger */}
               <motion.button
+                type="button"
                 whileHover={{ scale: 1.15, color: '#ef4444' }}
                 onClick={(e) => {
-                  e.stopPropagation();
+                  e.stopPropagation(); // Shield selection array hooks from firing
                   onDeleteSession(chat._id);
                 }}
-                className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 flex-shrink-0 transition-all delay-75"
+                className="opacity-0 group-hover:opacity-100 p-1 mr-2 text-zinc-400 flex-shrink-0 transition-all delay-75"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </motion.button>
-            </motion.button>
+            </motion.div>
           ))
         )}
       </motion.div>
 
+      {/* Footer Profile Control Platform */}
       <motion.div
         variants={staggerContainer(0.1, 0.35)}
         initial="hidden"
@@ -132,6 +146,7 @@ export default function ChatSidebar({
         }`}
       >
         <motion.button
+          type="button"
           variants={slideFromLeft(0)}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-colors ${
             darkMode ? 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
@@ -141,6 +156,7 @@ export default function ChatSidebar({
           <span>Settings Panel</span>
         </motion.button>
         <motion.button
+          type="button"
           variants={slideFromLeft(0.08)}
           onClick={onLogout}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-colors ${

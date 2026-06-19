@@ -11,6 +11,7 @@ const VALID_AGENTS = [
   AGENT_IDS.WRITER,
   AGENT_IDS.ANALYST,
   AGENT_IDS.GENERAL,
+  AGENT_IDS.IMAGE,
 ];
 
 function regexRoute(message) {
@@ -57,27 +58,19 @@ export async function routeToAgent(message, history = [], forcedAgent = null) {
   }
 
   try {
-    const routePrompt = `You are the Router Agent in a multi-agent AI system (year 2026).
-Pick the BEST specialist agent for the user's message.
-
+    const routePrompt = `...
 Agents:
-- research: real-time facts, news, web lookups, current events
-- code: programming, debugging, architecture, APIs, databases
-- writer: emails, essays, blogs, creative writing, copy
-- analyst: comparisons, pros/cons, strategy, structured analysis
+- research: real-time facts, news, web lookups
+- code: programming, debugging
+- writer: emails, essays, blogs
+- analyst: comparisons, strategy
+- image: generating visual art, images, and pictures
 - general: everything else
-
-Also decide if live web search is required (needsSearch: true for recent/live facts).
-
-User message: "${message}"
 
 Reply with ONLY valid JSON:
 {
-  "primaryAgent": "research|code|writer|analyst|general",
-  "secondaryAgents": [],
-  "needsSearch": true|false,
-  "confidence": 0.0-1.0,
-  "reasoning": "brief reason"
+  "primaryAgent": "research|code|writer|analyst|general|image",
+  ...
 }`;
 
     const raw = await completeChat({

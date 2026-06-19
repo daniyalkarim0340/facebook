@@ -26,18 +26,23 @@ export default function ChatMessage({
   onStartEdit,
   onDownloadImage,
 }) {
+  // Flag to adjust alignments, colors, and capabilities depending on the message origin
   const isUser = msg.role === 'user';
 
   return (
+    // 1. Main Motion Wrapper
+    // Uses structural properties (like 'justify-end' vs 'justify-start') to anchor bubbles left or right.
     <motion.div
       custom={{ isUser, index: idx }}
       variants={messageVariants}
       initial="hidden"
       animate="visible"
-      layout
+      layout // Ensures other messages animate smoothly into position when a bubble changes size (e.g. editing)
       key={`${idx}-${msg.content?.slice(0, 24)}`}
       className={`flex gap-4 w-full ${isUser ? 'justify-end' : 'justify-start'}`}
     >
+      
+      {/* 2. Left Side AI Avatar (Rendered only on AI responses) */}
       {!isUser && (
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
@@ -51,7 +56,12 @@ export default function ChatMessage({
         </motion.div>
       )}
 
+      {/* 3. Core Bubble Content Stream 
+          Uses 'group/msg' so child action panels can detect mouse hovering anywhere on this message.
+      */}
       <div className="flex flex-col max-w-[85%] group/msg min-w-0">
+        
+        {/* BRANCH A: Inside Inline Text Editor Workspace */}
         {isEditing ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
@@ -66,6 +76,7 @@ export default function ChatMessage({
               value={editingText}
               onChange={(e) => {
                 onEditTextChange(e.target.value);
+                // Dynamic auto-resizing script specifically for the editing panel container
                 e.target.style.height = 'auto';
                 e.target.style.height = `${e.target.scrollHeight}px`;
               }}
@@ -86,6 +97,8 @@ export default function ChatMessage({
             </div>
           </motion.div>
         ) : (
+          
+          // BRANCH B: Standard Static Message Render Block
           <motion.div
             whileHover={{ scale: 1.005 }}
             transition={{ type: 'spring', stiffness: 500, damping: 35, delay: 0.05 }}
@@ -99,23 +112,47 @@ export default function ChatMessage({
                     : 'bg-white text-zinc-800 border border-zinc-200/90 shadow-sm rounded-tl-sm')
             }`}
           >
+            {/* User Side: Render either the uploaded file layout asset or clean textual text inputs */}
             {isUser ? (
-              <p className="whitespace-pre-wrap break-words font-medium">{msg.content}</p>
+              msg.isImage ? (
+                <div className="my-1 max-w-xs sm:max-w-sm overflow-hidden rounded-xl border border-zinc-700/50 shadow-md">
+                  <img 
+                    src={msg.content} 
+                    alt="User uploaded file pipeline preview" 
+                    className="w-full h-auto object-cover max-h-[320px]" 
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <p className="whitespace-pre-wrap break-words font-medium">{msg.content}</p>
+              )
             ) : (
+              
+              /* AI Side: Render rich Markdown data configurations and custom element rules */
               <div className={`prose max-w-none space-y-3 prose-pre:p-0 prose-p:leading-relaxed ${
                 darkMode
                   ? 'prose-invert prose-p:text-zinc-100 prose-headings:text-zinc-50 prose-strong:text-zinc-100 prose-li:text-zinc-200'
                   : 'prose-zinc prose-p:text-zinc-700 prose-headings:text-zinc-900 prose-strong:text-zinc-800'
               }`}>
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
+                  remarkPlugins={[remarkGfm]} // Adds structural support for lists, tables, and checkboxes
                   components={{
+                    
+                    // FIX: Map paragraphs directly to block-level layout structures.
+                    // This completely avoids throwing hydration/nesting alerts when code blocks append structural sub-divs.
+                    p({ children }) {
+                      return <div className="leading-relaxed mb-3 last:mb-0">{children}</div>;
+                    },
+
+                    // CUSTOM ELEMENT OVERRIDE 1: Markdown Image Nodes (`![]()`)
                     img({ src, alt }) {
                       return (
                         <div className={`relative group/imgBlock my-5 max-w-xl overflow-hidden rounded-xl border shadow-sm ${
                           darkMode ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-200 bg-zinc-50'
                         }`}>
                           <img src={src} alt={alt || 'AI generated asset'} className="w-full h-auto object-cover max-h-[480px]" loading="lazy" />
+                          
+                          {/* Image Action Overlay: Fades in on hover to present download buttons */}
                           <div className="absolute inset-0 bg-zinc-950/40 opacity-0 group-hover/imgBlock:opacity-100 transition-opacity duration-300 delay-75 flex items-center justify-center backdrop-blur-xs">
                             <button
                               type="button"
@@ -129,20 +166,28 @@ export default function ChatMessage({
                         </div>
                       );
                     },
+                    
+                    // CUSTOM ELEMENT OVERRIDE 2: Markdown Code Nodes (```blocks``` vs `inline`)
                     code({ node, inline, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '');
                       const language = match ? match[1] : '';
                       const codeValue = String(children).replace(/\n$/, '');
+                      
+                      // Generates an explicit identifier so copy events target this code block exclusively
                       const blockId = `${idx}-${node.position?.start.offset || codeValue.substring(0, 10)}`;
 
                       return !inline ? (
+                        /* MULTI-LINE CODE BLOCK SETUP */
                         <div className={`my-5 overflow-hidden rounded-xl border shadow-md w-full ${
                           darkMode ? 'border-zinc-800 bg-[#1e1e1e]' : 'border-zinc-200 bg-zinc-50'
                         }`}>
+                          {/* Header window control panel bar */}
                           <div className={`flex items-center justify-between px-4 py-2.5 text-xs font-mono select-none border-b ${
                             darkMode ? 'bg-[#252526] text-zinc-400 border-zinc-800/80' : 'bg-zinc-100 text-zinc-500 border-zinc-200'
                           }`}>
                             <span className="font-semibold uppercase tracking-wider">{language || 'terminal-buffer'}</span>
+                            
+                            {/* Copy button tracking structural clipboards */}
                             <button
                               type="button"
                               onClick={() => onCopyCodeBlock(codeValue, blockId)}
@@ -155,6 +200,8 @@ export default function ChatMessage({
                               )}
                             </button>
                           </div>
+                          
+                          {/* Formal Syntax Highlighter Engine Layer */}
                           <SyntaxHighlighter
                             style={darkMode ? vscDarkPlus : vs}
                             language={language || 'text'}
@@ -173,6 +220,7 @@ export default function ChatMessage({
                           </SyntaxHighlighter>
                         </div>
                       ) : (
+                        /* SINGLE INLINE CODE SEGMENT RENDER STYLE */
                         <code className={`px-1.5 py-0.5 rounded font-mono text-xs md:text-sm font-semibold tracking-wide ${
                           darkMode ? 'bg-zinc-800 text-amber-400' : 'bg-zinc-200/60 text-amber-800'
                         }`} {...props}>
@@ -189,6 +237,7 @@ export default function ChatMessage({
           </motion.div>
         )}
 
+        {/* 4. Secondary Message Action Row (Reveals dynamically when user hovers over group/msg) */}
         {!isEditing && (
           <motion.div
             initial={{ opacity: 0, y: 4 }}
@@ -198,17 +247,21 @@ export default function ChatMessage({
               isUser ? 'justify-end pr-1' : 'justify-start pl-1'
             }`}
           >
-            <button
-              type="button"
-              onClick={() => onCopyText(msg.content, idx)}
-              className={`p-1.5 rounded-lg text-zinc-400 transition-colors ${
-                darkMode ? 'hover:bg-zinc-800 hover:text-zinc-200' : 'hover:bg-zinc-200/60 hover:text-zinc-700'
-              }`}
-              title="Copy Text Content"
-            >
-              {copiedIndex === idx ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
+            {/* Global Text Copy Trigger Button - Hide if message is purely an image asset */}
+            {(!isUser || !msg.isImage) && (
+              <button
+                type="button"
+                onClick={() => onCopyText(msg.content, idx)}
+                className={`p-1.5 rounded-lg text-zinc-400 transition-colors ${
+                  darkMode ? 'hover:bg-zinc-800 hover:text-zinc-200' : 'hover:bg-zinc-200/60 hover:text-zinc-700'
+                }`}
+                title="Copy Text Content"
+              >
+                {copiedIndex === idx ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            )}
 
+            {/* TTS Audio stream trigger (Hidden for standard user text or plain image outputs) */}
             {!isUser && !msg.content.includes('![Generated Image]') && (
               <button
                 type="button"
@@ -224,7 +277,8 @@ export default function ChatMessage({
               </button>
             )}
 
-            {isUser && (
+            {/* Direct Inline Editor Activation Switcher (Available to standard text user content bubbles only) */}
+            {isUser && !msg.isImage && (
               <button
                 type="button"
                 onClick={() => onStartEdit(idx, msg.content)}
@@ -240,6 +294,7 @@ export default function ChatMessage({
         )}
       </div>
 
+      {/* 5. Right Side User Avatar (Rendered only on User responses) */}
       {isUser && (
         <motion.div
           initial={{ scale: 0, opacity: 0 }}

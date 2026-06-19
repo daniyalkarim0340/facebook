@@ -72,10 +72,10 @@ app.use(limiter);
 // --------------------
 // ROUTES
 // --------------------
-app.use("/api/image", ImageRouter);
+
 app.use("/api/users", authroute);
 app.use("/api/ai", Airouter);
-
+app.use("/api/ai", ImageRouter);
 // ERROR MIDDLEWARE
 // --------------------
 app.use(Custommiddleware);

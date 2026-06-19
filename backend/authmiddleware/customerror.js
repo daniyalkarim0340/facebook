@@ -1,6 +1,7 @@
-const Custommiddleware = (err, req, res, next) => {
-    const statuscode = err.statuscode || 500;
-    const message = err.message || "Internal Server Error";
-    res.status(statuscode).json({ message });
+class CustomError extends Error {
+  constructor(message, statusCode) { // 👈 Message is 1st, Status is 2nd
+    super(message);
+    this.statusCode = statusCode;
+  }
 }
-export default Custommiddleware;
+export default CustomError;

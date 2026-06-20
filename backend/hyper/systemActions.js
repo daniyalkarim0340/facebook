@@ -5,7 +5,7 @@ import { exec } from 'child_process';
 //   This function acts as the bridge between the AI's "intent"
 //  * and your Windows computer's "actions".
 //  */
-function performWindowsAction(action, target) {
+export default function performWindowsAction(action, target) {
     // 1. Initialize an empty variable to hold the final terminal command
     let command = '';
 

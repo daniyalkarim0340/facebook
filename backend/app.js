@@ -2,10 +2,11 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
-import Custommiddleware from "./authmiddleware/customerror.js";
 import authroute from "./route/route.js";
 import Airouter from "./route/ai.route.js";
 import ImageRouter from "./route/image.route.js";
+import AIrouter from "./route/aiassstiant.route.js";
+import errorMiddleware from "./authmiddleware/error.middleware.js";
 
 dotenv.config();
 
@@ -76,8 +77,9 @@ app.use(limiter);
 app.use("/api/users", authroute);
 app.use("/api/ai", Airouter);
 app.use("/api/ai", ImageRouter);
+app.use("/api/ai",AIrouter)
 // ERROR MIDDLEWARE
 // --------------------
-app.use(Custommiddleware);
+app.use(errorMiddleware);
 
 export default app;

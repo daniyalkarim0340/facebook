@@ -1,5 +1,6 @@
+
 import Groq from "groq-sdk";
-import performWindowsAction from "./systemActions.js";
+import performWindowsAction from "./systemActions.js"; // Make sure this points to your newly updated file
 import dotenv from "dotenv";
 import CustomError from "../authmiddleware/customerror.js";
 
@@ -188,20 +189,23 @@ fast, deterministic, structured, and extremely accurate.
 You are the intelligence layer between human language and system execution.
 `;
 
-export const handleUserMessage = async (userText) => {
+
+export const handleUserMessage = async (userText, chatHistory = []) => {
     if (!userText) {
-        return next (new CustomError("Message is required",400));
+        throw new CustomError("Message is required", 400);
     }
 
+    // 1. Build the conversation thread (System + History + New User Message)
+    const messages = [
+        { role: "system", content: MASTER_SYSTEM_PROMPT },
+        ...chatHistory, // Inject past memory here
+        { role: "user", content: userText }
+    ];
+
+    // 2. FIRST LLM CALL: Ask Groq to reason and select a tool
     const response = await llmClient.chat.completions.create({
         model: "llama-3.3-70b-versatile",
-        messages: [
-            {
-                role: "system",
-                content: MASTER_SYSTEM_PROMPT
-            },
-            { role: "user", content: userText }
-        ],
+        messages: messages,
         tools: [
             {
                 type: "function",
@@ -213,12 +217,7 @@ export const handleUserMessage = async (userText) => {
                         properties: {
                             action: {
                                 type: "string",
-                                enum: [
-                                    "open_app",
-                                    "open_folder",
-                                    "open_website",
-                                    "system"
-                                ]
+                                enum: ["open_app", "open_folder", "open_website", "system"]
                             },
                             target: { type: "string" }
                         },
@@ -232,31 +231,42 @@ export const handleUserMessage = async (userText) => {
 
     const message = response.choices[0].message;
 
+    // 3. THE LOOP: Did Groq choose a tool?
     if (message.tool_calls) {
-        const args = JSON.parse(
-            message.tool_calls[0].function.arguments
-        );
+        const toolCall = message.tool_calls[0];
+        const args = JSON.parse(toolCall.function.arguments);
 
-        const result = performWindowsAction(
-            args.action,
-            args.target
-        );
+        // A. Add Groq's tool request to the message history
+        messages.push(message);
 
-        let parsedResult;
-        try {
-            parsedResult = JSON.parse(result);
-        } catch (e) {
-            parsedResult = { success: true, raw: result };
-        }
+        // B. Execute the system action (NOW IT WAITS FOR THE OS!)
+        const resultJSON = await performWindowsAction(args.action, args.target);
+        
+        // C. Add the OS result back into the history as a "tool" message
+        messages.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            name: toolCall.function.name,
+            content: resultJSON 
+        });
 
+        // 4. SECOND LLM CALL: Ask Groq to summarize the result for the user
+        const finalResponse = await llmClient.chat.completions.create({
+            model: "llama-3.3-70b-versatile",
+            messages: messages
+        });
+
+        // 5. Return everything nicely packaged for your frontend
         return {
-            type: "tool",
-            tool: "performWindowsAction",
+            type: "agent_response",
+            tool: toolCall.function.name,
             input: args,
-            result: parsedResult
+            execution_result: JSON.parse(resultJSON),
+            message: finalResponse.choices[0].message.content
         };
     }
 
+    // Fallback: If no tool was needed, just return the chat response
     return {
         type: "chat",
         message: message.content

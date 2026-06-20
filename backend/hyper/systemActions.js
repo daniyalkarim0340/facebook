@@ -1,6 +1,11 @@
 import { exec } from "child_process";
+import { promisify } from "util"; // 1. Import promisify
 
-export default function performWindowsAction(action, target) {
+// 2. Convert callback-based exec into a Promise
+const execPromise = promisify(exec); 
+
+// 3. Make the function async
+export default async function performWindowsAction(action, target) {
     let command = "";
 
     const apps = {
@@ -66,19 +71,13 @@ export default function performWindowsAction(action, target) {
     // ========================
     // 🧠 ULTRA SMART FALLBACK
     // ========================
-
     if (!command) {
-        // If AI confused app vs website
         if (action === "open_app" && websites[key]) {
             command = `start ${websites[key]}`;
         }
-
-        // If unknown app → try website
         else if (action === "open_app") {
             command = `start https://www.${key}.com`;
         }
-
-        // If unknown website → try app fallback
         else if (action === "open_website" && apps[key]) {
             command = apps[key];
         }
@@ -87,13 +86,9 @@ export default function performWindowsAction(action, target) {
     // ========================
     // 🛡️ ULTRA SAFETY SYSTEM
     // ========================
-
     const dangerous = ["shutdown", "restart", "format", "delete", "wipe"];
 
-    if (
-        action === "system" &&
-        dangerous.includes(key)
-    ) {
+    if (action === "system" && dangerous.includes(key)) {
         return JSON.stringify({
             success: false,
             blocked: true,
@@ -112,23 +107,30 @@ export default function performWindowsAction(action, target) {
     }
 
     // ========================
-    // ⚡ EXECUTE COMMAND
+    // ⚡ EXECUTE COMMAND (UPDATED FOR LOOP)
     // ========================
-    exec(command, (error) => {
-        if (error) {
-            console.error("Execution error:", error.message);
-        } else {
-            console.log("Executed:", command);
-        }
-    });
-
-    // ========================
-    // 📦 RESPONSE
-    // ========================
-    return JSON.stringify({
-        success: true,
-        action,
-        target,
-        message: `Executed ${action} → ${target}`
-    });
+    try {
+        // 4. Wait for the OS to actually execute the command
+        await execPromise(command);
+        
+        console.log("Executed:", command);
+        
+        return JSON.stringify({
+            success: true,
+            action,
+            target,
+            message: `Executed ${action} → ${target}`
+        });
+    } catch (error) {
+        // 5. Catch system errors (e.g., app not installed) so the AI knows!
+        console.error("Execution error:", error.message);
+        
+        return JSON.stringify({
+            success: false,
+            action,
+            target,
+            error: error.message,
+            message: `Failed to execute ${action} → ${target}`
+        });
+    }
 }

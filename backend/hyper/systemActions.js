@@ -26,60 +26,94 @@ export default function performWindowsAction(action, target) {
         gmail: "https://mail.google.com"
     };
 
-    // ------------------------
-    // OPEN APP
-    // ------------------------
-    if (action === "open_app") {
-        command = apps[target.toLowerCase()];
-    }
+    const key = (target || "").toLowerCase();
 
-    // ------------------------
-    // OPEN FOLDER
-    // ------------------------
-    else if (action === "open_folder") {
-        command = `explorer "${target}"`;
-    }
-
-    // ------------------------
-    // OPEN WEBSITE
-    // ------------------------
-    else if (action === "open_website") {
-        const url = websites[target.toLowerCase()] || target;
-
-        // opens in default browser
-        command = `start ${url}`;
-    }
-
-    // ------------------------
-    // SYSTEM COMMANDS
-    // ------------------------
-    else if (action === "system") {
-        if (target === "shutdown") {
+    // ========================
+    // 🧠 SYSTEM ACTIONS
+    // ========================
+    if (action === "system") {
+        if (key === "shutdown") {
             command = "shutdown /s /t 0";
-        }
-
-        if (target === "restart") {
+        } else if (key === "restart") {
             command = "shutdown /r /t 0";
-        }
-
-        if (target === "lock") {
+        } else if (key === "lock") {
             command = "rundll32.exe user32.dll,LockWorkStation";
         }
     }
 
-    // ------------------------
-    // SAFETY CHECK
-    // ------------------------
+    // ========================
+    // 💻 OPEN APP
+    // ========================
+    else if (action === "open_app") {
+        command = apps[key];
+    }
+
+    // ========================
+    // 🌐 OPEN WEBSITE
+    // ========================
+    else if (action === "open_website") {
+        const url = websites[key] || `https://www.${key}.com`;
+        command = `start ${url}`;
+    }
+
+    // ========================
+    // 📁 OPEN FOLDER
+    // ========================
+    else if (action === "open_folder") {
+        command = `explorer "${target}"`;
+    }
+
+    // ========================
+    // 🧠 ULTRA SMART FALLBACK
+    // ========================
+
     if (!command) {
+        // If AI confused app vs website
+        if (action === "open_app" && websites[key]) {
+            command = `start ${websites[key]}`;
+        }
+
+        // If unknown app → try website
+        else if (action === "open_app") {
+            command = `start https://www.${key}.com`;
+        }
+
+        // If unknown website → try app fallback
+        else if (action === "open_website" && apps[key]) {
+            command = apps[key];
+        }
+    }
+
+    // ========================
+    // 🛡️ ULTRA SAFETY SYSTEM
+    // ========================
+
+    const dangerous = ["shutdown", "restart", "format", "delete", "wipe"];
+
+    if (
+        action === "system" &&
+        dangerous.includes(key)
+    ) {
         return JSON.stringify({
             success: false,
-            error: "Command not supported"
+            blocked: true,
+            message: "⚠️ Safety system blocked this system command"
         });
     }
 
-    // ------------------------
-    // EXECUTE
-    // ------------------------
+    // ========================
+    // ❌ FINAL VALIDATION
+    // ========================
+    if (!command) {
+        return JSON.stringify({
+            success: false,
+            error: "Command not supported by system"
+        });
+    }
+
+    // ========================
+    // ⚡ EXECUTE COMMAND
+    // ========================
     exec(command, (error) => {
         if (error) {
             console.error("Execution error:", error.message);
@@ -88,8 +122,13 @@ export default function performWindowsAction(action, target) {
         }
     });
 
+    // ========================
+    // 📦 RESPONSE
+    // ========================
     return JSON.stringify({
         success: true,
+        action,
+        target,
         message: `Executed ${action} → ${target}`
     });
 }

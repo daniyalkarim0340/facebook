@@ -11,14 +11,12 @@ const llmClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
  */
 export async function handleUserMessage(userText) {
     try {
-        // 1. Send request to the AI model
-        // We define the 'tools' so the AI knows it has permission to call performWindowsAction
         const response = await llmClient.chat.completions.create({
             model: "llama-3.3-70b-versatile",
             messages: [
-                { 
-                    role: "system", 
-                    content: "You are a desktop assistant. If the user asks to open an app/folder, use the 'performWindowsAction' tool." 
+                {
+                    role: "system",
+                    content: "You are a desktop assistant. Use tools when needed."
                 },
                 { role: "user", content: userText }
             ],
@@ -26,39 +24,56 @@ export async function handleUserMessage(userText) {
                 type: "function",
                 function: {
                     name: "performWindowsAction",
-                    description: "Opens a Windows application or folder.",
+                    description: "Open apps or folders",
                     parameters: {
                         type: "object",
                         properties: {
-                            action: { type: "string", enum: ["open_app", "open_folder"] },
+                            action: {
+                                type: "string",
+                                enum: ["open_app", "open_folder"]
+                            },
                             target: { type: "string" }
                         },
                         required: ["action", "target"]
                     }
                 }
             }],
-            tool_choice: "auto" // AI decides automatically whether to just talk or use a tool
+            tool_choice: "auto"
         });
 
-        // 2. Extract the AI's message from the response
         const message = response.choices[0].message;
 
-        // 3. Check if the AI wants to use a tool
+        // TOOL CALL
         if (message.tool_calls) {
-            // Parse the arguments (action/target) the AI decided on
             const args = JSON.parse(message.tool_calls[0].function.arguments);
-            
-            // Execute the system action using the imported function
-            const result = performWindowsAction(args.action, args.target);
-            
-            // Log the result of the tool execution
-            console.log("System Result:", result);
-        } else {
-            // 4. Handle standard chat (if no tool was called)
-            console.log("AI says:", message.content);
+
+        const result = performWindowsAction(args.action, args.target);
+
+let parsedResult;
+try {
+    parsedResult = JSON.parse(result);
+} catch (e) {
+    parsedResult = { success: true, raw: result };
+}
+
+return {
+    type: "tool",
+    tool: "performWindowsAction",
+    input: args,
+    result: parsedResult
+};
         }
+
+        // NORMAL CHAT
+        return {
+            type: "chat",
+            message: message.content
+        };
+
     } catch (error) {
-        // Error handling if the API call or tool execution fails
-        console.error("Error in AI Assistant:", error);
+        return {
+            type: "error",
+            message: error.message
+        };
     }
 }

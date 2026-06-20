@@ -12,11 +12,18 @@ function performWindowsAction(action, target) {
     // 2. Check what kind of action the AI requested
     if (action === 'open_app') {
         // Create a list of allowed apps and their corresponding Windows commands
-        const apps = {
-            'chrome': 'start chrome',
-            'notepad': 'start notepad',
-            'calculator': 'calc'
-        };
+       const apps = {
+  chrome: 'start chrome',
+  edge: 'start msedge',
+  firefox: 'start firefox',
+  notepad: 'start notepad',
+  calculator: 'calc',
+  vscode: 'code',
+  explorer: 'explorer',
+  paint: 'mspaint',
+  cmd: 'cmd',
+  powershell: 'powershell'
+};
         // Look up the command based on the target (e.g., 'chrome')
         command = apps[target.toLowerCase()];
 

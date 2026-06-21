@@ -45,9 +45,11 @@ export async function runMultiAgentPipeline({
   'restart', 'reboot', 'shutdown', 'turn off', 'power off', 'lock', 'sleep', 'hibernate', 'log out', 'sign out',
   'tasklist', 'active tasks', 'running apps', 'processes'
 ];
-const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER || 
-                            computerTriggers.some(word => message.toLowerCase().startsWith(word));
 
+const cleanMessage = message.toLowerCase().trim();
+
+const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER || 
+                          computerTriggers.some(word => cleanMessage.includes(word));
   if (isComputerRequest) {
     onStatus?.('Computer Agent: Executing system action...');
     pipeline.push({ step: 2, agent: AGENT_IDS.COMPUTER, status: 'running' });

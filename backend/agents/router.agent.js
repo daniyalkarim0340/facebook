@@ -5,6 +5,7 @@ import {
   ROUTER_MODEL,
 } from './agent.config.js';
 
+// 🟩 FIXED: Added AGENT_IDS.COMPUTER to the valid array layer
 const VALID_AGENTS = [
   AGENT_IDS.RESEARCH,
   AGENT_IDS.CODE,
@@ -12,10 +13,23 @@ const VALID_AGENTS = [
   AGENT_IDS.ANALYST,
   AGENT_IDS.GENERAL,
   AGENT_IDS.IMAGE,
+  AGENT_IDS.COMPUTER, // 👈 Added
 ];
 
 function regexRoute(message) {
   const lower = message.toLowerCase();
+
+  // ── 💻 NEW: System & Computer Automation Patterns Check ─────────────────
+  // Placed high up so actionable OS triggers intercept smoothly
+  const computerPatterns = /\b(open|launch|run|close|kill|terminate|make|create|build|delete|remove|folder|file|directory|restart|reboot|shutdown|lock|power off)\b/i;
+  if (computerPatterns.test(lower)) {
+    return { 
+      primaryAgent: AGENT_IDS.COMPUTER, 
+      needsSearch: false, 
+      confidence: 0.85, 
+      reasoning: 'System command or folder/file automation keyword detected' 
+    };
+  }
 
   if (EXPLICIT_SEARCH_TRIGGERS.some((t) => lower.includes(t))) {
     return { primaryAgent: AGENT_IDS.RESEARCH, needsSearch: true, confidence: 0.9, reasoning: 'Explicit search request' };
@@ -58,19 +72,26 @@ export async function routeToAgent(message, history = [], forcedAgent = null) {
   }
 
   try {
-    const routePrompt = `...
-Agents:
+    // 🟩 FIXED: Added explicit computer task definition instructions to the prompt block
+    const routePrompt = `You are a routing agent analyzing a user message.
+User Message: "${message}"
+
+Agents available:
 - research: real-time facts, news, web lookups
-- code: programming, debugging
+- code: writing programs, complex developer code blocks, backend logic
 - writer: emails, essays, blogs
 - analyst: comparisons, strategy
 - image: generating visual art, images, and pictures
+- computer: operating system controls, creating/deleting folders or files, opening apps, running system actions, restarting/locking/shutting down PC
 - general: everything else
 
 Reply with ONLY valid JSON:
 {
-  "primaryAgent": "research|code|writer|analyst|general|image",
-  ...
+  "primaryAgent": "research|code|writer|analyst|general|image|computer",
+  "secondaryAgents": [],
+  "needsSearch": false,
+  "confidence": 0.9,
+  "reasoning": "Brief explanation text here"
 }`;
 
     const raw = await completeChat({
@@ -79,7 +100,7 @@ Reply with ONLY valid JSON:
       maxTokens: 200,
       jsonMode: true,
       messages: [
-        { role: 'system', content: 'Output raw JSON only. No markdown.' },
+        { role: 'system', content: 'Output raw JSON only. No markdown text formatting wrappers inside the JSON.' },
         ...history.slice(-2),
         { role: 'user', content: routePrompt },
       ],

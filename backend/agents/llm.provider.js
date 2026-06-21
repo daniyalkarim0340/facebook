@@ -15,12 +15,15 @@ export async function completeChat({
   jsonMode = false,
 }) {
   const modelConfig = AVAILABLE_MODELS[model] || AVAILABLE_MODELS[DEFAULT_MODEL];
-  const tokenLimit = maxTokens ?? modelConfig.maxTokens;
+  const tokenLimit = maxTokens ?? modelConfig?.maxTokens ?? 1024;
 
-  if (model === 'gemma3:4b') {
+  // ── 🦙 OLLAMA LOCAL EXECUTION LAYER ──────────────────────────────────
+  if (model === 'gemma3:4b' || modelConfig?.provider === 'ollama') {
     const result = await ollama.chat({
       model: 'gemma3:4b',
       messages,
+      // 🟩 FIXED: Enforces structured JSON output natively inside Ollama
+      format: jsonMode ? 'json' : undefined, 
       options: {
         temperature,
         num_predict: tokenLimit,
@@ -29,12 +32,14 @@ export async function completeChat({
     return result.message.content;
   }
 
+  // ── ⚡ GROQ CLOUD EXECUTION LAYER ────────────────────────────────────
   const completion = await groq.chat.completions.create({
     model,
     messages,
     temperature,
     top_p: 0.9,
     max_tokens: tokenLimit,
+    // Enforces structured JSON output natively inside Groq
     ...(jsonMode && { response_format: { type: 'json_object' } }),
   });
 

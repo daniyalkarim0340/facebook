@@ -34,7 +34,7 @@ export default async function performWindowsAction(action, target, extraArgs = {
 
             case "read_file": {
                 const content = await fs.readFile(target, "utf-8");
-                return JSON.stringify({ success: true, filename: path.basename(target), content: content.slice(0, 5000) }); // Limit read to safety thresholds
+                return JSON.stringify({ success: true, filename: path.basename(target), content: content.slice(0, 5000) }); 
             }
 
             case "write_file": {
@@ -62,6 +62,12 @@ export default async function performWindowsAction(action, target, extraArgs = {
                     return JSON.stringify({ success: true, message: `Force terminated process: ${processName}` });
                 }
                 throw new Error(`Unknown process action sub-type: ${target}`);
+
+            // ── 📁 DIRECTORY STRUCTURING CONTROLS ─────────────────────────────
+            case "create_folder":
+                // Directly runs recursive directory creation on the targeted path string
+                await fs.mkdir(target, { recursive: true });
+                return JSON.stringify({ success: true, message: `Successfully created folder at: ${target}` });
 
             case "system":
                 if (target === "lock") {

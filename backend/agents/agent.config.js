@@ -4,7 +4,7 @@ export const AVAILABLE_MODELS = {
   'openai/gpt-oss-20b': { name: 'GPT-OSS 20B (Efficient)', maxTokens: 4096 },
   'qwen/qwen3-32b': { name: 'Qwen3 32B (Multilingual/Code)', maxTokens: 4096 },
   'meta-llama/llama-4-scout-17b-16e-instruct': { name: 'Llama 4 Scout (Agentic)', maxTokens: 4096 },
-  'gemma3:4b': { name: 'Gemma 3 4B (Local Ollama)', maxTokens: 4096 },
+  'gemma3:4b': { name: 'Gemma 3 4B (Local Ollama)', maxTokens: 5096 },
 };
 
 export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';

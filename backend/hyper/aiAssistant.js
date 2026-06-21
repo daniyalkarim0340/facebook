@@ -215,47 +215,47 @@ export const executeComputerTask = async (userText, chatHistory = []) => {
     const response = await llmClient.chat.completions.create({
         model: "llama-3.3-70b-versatile",
         messages: messages,
-        // Replace the tools array inside your Groq completion call inside computer.controllar.js:
-tools: [
-    {
-        type: "function",
-        function: {
-            name: "performWindowsAction",
-            description: "Deep Operating System Automation Controller. Reads/writes files, navigates directories, handles web, and stops apps.",
-            parameters: {
-                type: "object",
-                properties: {
-                    action: {
-                        type: "string",
-                        enum: [
-                            "open_app", 
-                            "open_folder", 
-                            "open_website", 
-                            "list_directory", 
-                            "read_file", 
-                            "write_file", 
-                            "delete_file", 
-                            "manage_process", 
-                            "system"
-                        ]
-                    },
-                    target: { 
-                        type: "string", 
-                        description: "The primary item or path (e.g., 'C:\\Users\\Desktop', 'chrome', 'restart', 'kill')." 
-                    },
-                    extraArgs: {
+        tools: [
+            {
+                type: "function",
+                function: {
+                    name: "performWindowsAction",
+                    description: "Deep Operating System Automation Controller. Reads/writes files, navigates directories, handles web, and stops apps.",
+                    parameters: {
                         type: "object",
                         properties: {
-                            fileContent: { type: "string", description: "The content payload required when executing a write_file action." },
-                            processName: { type: "string", description: "The exact executable name required when actioning a manage_process 'kill' command (e.g., 'notepad.exe')." }
-                        }
+                            action: {
+                                type: "string",
+                                enum: [
+                                    "open_app", 
+                                    "open_folder", 
+                                    "open_website", 
+                                    "list_directory", 
+                                    "create_folder",
+                                    "read_file", 
+                                    "write_file", 
+                                    "delete_file", 
+                                    "manage_process", 
+                                    "system"
+                                ]
+                            },
+                            target: { 
+                                type: "string", 
+                                description: "The primary item or path (e.g., 'C:\\\\Users\\\\Desktop\\\\ProjectNova', 'chrome', 'restart')." 
+                            },
+                            extraArgs: {
+                                type: "object",
+                                properties: {
+                                    fileContent: { type: "string", description: "The content payload required when executing a write_file action." },
+                                    processName: { type: "string", description: "The exact executable name required when actioning a manage_process 'kill' command (e.g., 'notepad.exe')." }
+                                }
+                            }
+                        },
+                        required: ["action", "target"]
                     }
-                },
-                required: ["action", "target"]
+                }
             }
-        }
-    }
-],
+        ],
         tool_choice: "auto"
     });
 
@@ -267,8 +267,8 @@ tools: [
 
         messages.push(message);
 
-        // Wait for OS execution
-        const resultJSON = await performWindowsAction(args.action, args.target);
+        // 🟩 FIXED: Now cleanly passing args.extraArgs down to your execution engine
+        const resultJSON = await performWindowsAction(args.action, args.target, args.extraArgs);
         
         messages.push({
             role: "tool",
@@ -277,7 +277,7 @@ tools: [
             content: resultJSON 
         });
 
-        // Final summary
+        // Final summary generation
         const finalResponse = await llmClient.chat.completions.create({
             model: "llama-3.3-70b-versatile",
             messages: messages

@@ -101,6 +101,15 @@ Allowed actions:
 - restart
 - lock
 
+
+========================================================
+             FILE & ENVIRONMENT MANAGEMENT RULES
+========================================================
+- If a user asks to write a file or edit text, use 'write_file'. Provide complete structure inside 'extraArgs.fileContent'.
+- If a user asks to close an application or stop a task, call 'manage_process' with target 'kill' and assign 'extraArgs.processName'.
+- To review what is inside a folder before modifying files, always call 'list_directory' first to confirm.
+- Always use absolute escaped paths for Windows directories (e.g., "C:\\Users\\Name\\Documents").
+
 ========================================================
                  INTENT CLASSIFICATION ENGINE
 ========================================================
@@ -206,26 +215,47 @@ export const executeComputerTask = async (userText, chatHistory = []) => {
     const response = await llmClient.chat.completions.create({
         model: "llama-3.3-70b-versatile",
         messages: messages,
-        tools: [
-            {
-                type: "function",
-                function: {
-                    name: "performWindowsAction",
-                    description: "Open apps or folders",
-                    parameters: {
+        // Replace the tools array inside your Groq completion call inside computer.controllar.js:
+tools: [
+    {
+        type: "function",
+        function: {
+            name: "performWindowsAction",
+            description: "Deep Operating System Automation Controller. Reads/writes files, navigates directories, handles web, and stops apps.",
+            parameters: {
+                type: "object",
+                properties: {
+                    action: {
+                        type: "string",
+                        enum: [
+                            "open_app", 
+                            "open_folder", 
+                            "open_website", 
+                            "list_directory", 
+                            "read_file", 
+                            "write_file", 
+                            "delete_file", 
+                            "manage_process", 
+                            "system"
+                        ]
+                    },
+                    target: { 
+                        type: "string", 
+                        description: "The primary item or path (e.g., 'C:\\Users\\Desktop', 'chrome', 'restart', 'kill')." 
+                    },
+                    extraArgs: {
                         type: "object",
                         properties: {
-                            action: {
-                                type: "string",
-                                enum: ["open_app", "open_folder", "open_website", "system"]
-                            },
-                            target: { type: "string" }
-                        },
-                        required: ["action", "target"]
+                            fileContent: { type: "string", description: "The content payload required when executing a write_file action." },
+                            processName: { type: "string", description: "The exact executable name required when actioning a manage_process 'kill' command (e.g., 'notepad.exe')." }
+                        }
                     }
-                }
+                },
+                required: ["action", "target"]
             }
-        ],
+        }
+    }
+],
         tool_choice: "auto"
     });
 

@@ -27,8 +27,25 @@ export async function runMultiAgentPipeline({
 
   // ── 💻 NEW: Computer Agent Interception ──────────────────────
   // Trigger words to ensure OS commands bypass normal chat
-  const computerTriggers = ['open', 'restart', 'shutdown', 'lock', 'go to'];
-  const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER || 
+ const computerTriggers = [
+  // ── APP MANIPULATION ──
+  'open', 'start', 'launch', 'run', 'execute', 'boot', 'bring up',
+  'close', 'kill', 'stop', 'terminate', 'end task', 'force quit', 'exit', 'quit',
+
+  // ── WEB & INTERNET ──
+  'go to', 'open website', 'browse', 'navigate to', 'visit', 'search for', 'look up', 'google',
+
+  // ── FILE & FOLDER OPERATIONS ──
+  'make', 'create', 'build', 'spawn', 'new folder', 'new file', 'generate file', 'generate folder',
+  'write', 'save', 'update', 'append', 'edit', 'modify', 'change content',
+  'delete', 'remove', 'trash', 'wipe', 'clear', 'erase', 'destroy',
+  'read', 'view', 'show', 'display', 'list', 'show files', 'look inside', 'check folder', 'directory', 'dir',
+
+  // ── OS PROCESS & POWER CONTROLS ──
+  'restart', 'reboot', 'shutdown', 'turn off', 'power off', 'lock', 'sleep', 'hibernate', 'log out', 'sign out',
+  'tasklist', 'active tasks', 'running apps', 'processes'
+];
+const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER || 
                             computerTriggers.some(word => message.toLowerCase().startsWith(word));
 
   if (isComputerRequest) {

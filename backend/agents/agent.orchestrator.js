@@ -3,6 +3,8 @@ import { runResearchAgent, runSpecialistAgent } from './specialists/index.js';
 import { optimizeSearchQuery, runWebSearch } from './tools/webSearch.tool.js';
 import { AGENTS, AGENT_IDS, AVAILABLE_MODELS, DEFAULT_MODEL } from './agent.config.js';
 import { executeImageGeneration } from '../controllar/image.controllar.js';
+import { executeComputerTask } from '../hyper/aiAssistant.js';
+ // 👈 Import new controller
 
 /**
  * Multi-Agent Pipeline
@@ -23,11 +25,44 @@ export async function runMultiAgentPipeline({
 
   const route = await routeToAgent(message, history, forcedAgent);
 
-  // ── 🟩 FIXED: Image Generation Interception ──────────────────
-  // Use AGENT_IDS.IMAGE (which is 'image') instead of hardcoded 'IMAGE_AGENT'
-  const triggerWords = ['generate an image', 'generate image', 'make an image', 'make a image', 'draw an image', 'draw a image', 'create an image'];
+  // ── 💻 NEW: Computer Agent Interception ──────────────────────
+  // Trigger words to ensure OS commands bypass normal chat
+  const computerTriggers = ['open', 'restart', 'shutdown', 'lock', 'go to'];
+  const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER || 
+                            computerTriggers.some(word => message.toLowerCase().startsWith(word));
+
+  if (isComputerRequest) {
+    onStatus?.('Computer Agent: Executing system action...');
+    pipeline.push({ step: 2, agent: AGENT_IDS.COMPUTER, status: 'running' });
+
+    try {
+      const computerResult = await executeComputerTask(message, history);
+      pipeline[pipeline.length - 1].status = 'completed';
+
+      return {
+        response: computerResult.responseMessage,
+        primaryAgent: AGENT_IDS.COMPUTER,
+        agentsPipeline: pipeline.map((p) => p.agent),
+        toolExecuted: computerResult.success ? `NOVA OS Tool: ${computerResult.input.action}` : 'None',
+        isComputerAction: true,
+        agentMeta: {
+          route,
+          actionDetails: computerResult.input,
+          executionResult: computerResult.execution_result,
+          model: 'llama-3.3-70b-versatile',
+        },
+      };
+    } catch (error) {
+      console.error("Computer Pipeline interception failed:", error);
+      pipeline[pipeline.length - 1].status = 'failed';
+      // If it fails, let it fall through to a normal specialist agent response
+    }
+  }
+
+  // ── 🟩 Image Generation Interception ──────────────────────────
+  const imageTriggerWords = ['generate an image', 'generate image', 'make an image', 'draw an image', 'create an image'];
   const isImageRequest = route.primaryAgent === AGENT_IDS.IMAGE || 
-                         triggerWords.some(word => message.toLowerCase().includes(word));
+                         imageTriggerWords.some(word => message.toLowerCase().includes(word));
 
   if (isImageRequest) {
     onStatus?.('Image Agent: generating your visual asset...');
@@ -35,25 +70,21 @@ export async function runMultiAgentPipeline({
 
     try {
       let cleanPrompt = message;
-      triggerWords.forEach(word => {
+      imageTriggerWords.forEach(word => {
         cleanPrompt = cleanPrompt.replace(new RegExp(word, 'gi'), '');
       });
       cleanPrompt = cleanPrompt.replace(/for/i, '').trim();
 
       const imageUrl = await executeImageGeneration(cleanPrompt || message);
-
       pipeline[pipeline.length - 1].status = 'completed';
 
       return {
         response: imageUrl, 
         primaryAgent: AGENT_IDS.IMAGE,
         agentsPipeline: pipeline.map((p) => p.agent),
-        toolExecuted: 'Pollinations FLUX Engine via Cloudinary Stream',
+        toolExecuted: 'Pollinations FLUX Engine',
         isImage: true, 
-        agentMeta: {
-          route,
-          model: 'flux-pollinations',
-        },
+        agentMeta: { route, model: 'flux-pollinations' },
       };
     } catch (error) {
       console.error("Image Pipeline interception failed:", error);
@@ -65,12 +96,11 @@ export async function runMultiAgentPipeline({
   let researchContext = '';
   let sourceCount = 0;
   let searchQuery = null;
-
   const shouldSearch = route.needsSearch && route.primaryAgent !== AGENT_IDS.RESEARCH;
 
   if (route.primaryAgent === AGENT_IDS.RESEARCH || shouldSearch) {
     onStatus?.('Research Agent: searching the web...');
-    pipeline.push({ step: 2, agent: AGENT_IDS.RESEARCH, status: 'running' });
+    pipeline.push({ step: pipeline.length + 1, agent: AGENT_IDS.RESEARCH, status: 'running' });
 
     if (route.primaryAgent === AGENT_IDS.RESEARCH) {
       const result = await runResearchAgent({ message, history, model: selectedModel });
@@ -80,13 +110,8 @@ export async function runMultiAgentPipeline({
         response: result.response,
         primaryAgent: AGENT_IDS.RESEARCH,
         agentsPipeline: pipeline.map((p) => p.agent),
-        toolExecuted: `Multi-Agent: ${AGENTS[AGENT_IDS.RESEARCH].name} + Tavily Web Search`,
-        agentMeta: {
-          route,
-          searchQuery: result.searchQuery,
-          sourceCount: result.sourceCount,
-          model: selectedModel,
-        },
+        toolExecuted: `Multi-Agent: ${AGENTS[AGENT_IDS.RESEARCH].name} + Web Search`,
+        agentMeta: { route, searchQuery: result.searchQuery, sourceCount: result.sourceCount, model: selectedModel },
       };
     }
 
@@ -103,16 +128,13 @@ export async function runMultiAgentPipeline({
   pipeline.push({ step: pipeline.length + 1, agent: route.primaryAgent, status: 'running' });
 
   const result = await runSpecialistAgent(route.primaryAgent, {
-    message,
-    history,
-    model: selectedModel,
-    researchContext,
+    message, history, model: selectedModel, researchContext,
   });
 
   pipeline[pipeline.length - 1].status = 'completed';
 
   const toolLabel = researchContext
-    ? `Multi-Agent: ${specialist.name} + Research + Tavily`
+    ? `Multi-Agent: ${specialist.name} + Research`
     : `Multi-Agent: ${specialist.name}`;
 
   return {
@@ -120,12 +142,6 @@ export async function runMultiAgentPipeline({
     primaryAgent: route.primaryAgent,
     agentsPipeline: pipeline.map((p) => p.agent),
     toolExecuted: toolLabel,
-    agentMeta: {
-      route,
-      searchQuery,
-      sourceCount,
-      model: selectedModel,
-      secondaryAgents: route.secondaryAgents,
-    },
+    agentMeta: { route, searchQuery, sourceCount, model: selectedModel, secondaryAgents: route.secondaryAgents },
   };
 }

@@ -1,17 +1,30 @@
 import express from "express";
-import { handleUserMessage } from "../hyper/aiAssistant.js";
-
-
+import { runMultiAgentPipeline } from "../agents/agent.orchestrator.js";
 const AIrouter = express.Router();
 
-AIrouter.post("/destop", async (req, res, next) => {
+AIrouter.post("/desktop", async (req, res, next) => {
     try {
-        const { message, history } = req.body; // history = [{role: "user", content: "..."}, {role: "assistant", content: "..."}]
+        const { message, history, model, forcedAgent } = req.body; 
         
-        const result = await handleUserMessage(message, history || []);
+        if (!message) {
+            return res.status(400).json({ error: "Message is required." });
+        }
+
+        const onStatus = (statusUpdate) => {
+            console.log(`[Pipeline]: ${statusUpdate}`);
+        };
+
+        const result = await runMultiAgentPipeline({
+            message,
+            history: history || [],
+            model,               
+            forcedAgent,         
+            onStatus
+        });
         
         res.json(result);
     } catch (error) {
+        console.error("Multi-Agent Pipeline Error:", error);
         next(error);
     }
 });

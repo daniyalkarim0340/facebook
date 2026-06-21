@@ -1,6 +1,8 @@
 
+
+
 import Groq from "groq-sdk";
-import performWindowsAction from "./systemActions.js"; // Make sure this points to your newly updated file
+import performWindowsAction from "./systemActions.js"; // Adjust path if needed
 import dotenv from "dotenv";
 import CustomError from "../authmiddleware/customerror.js";
 
@@ -9,6 +11,7 @@ dotenv.config();
 const llmClient = new Groq({
     apiKey: process.env.GROQ_API_KEY,
 });
+
 
 
 const MASTER_SYSTEM_PROMPT = `
@@ -189,20 +192,17 @@ fast, deterministic, structured, and extremely accurate.
 You are the intelligence layer between human language and system execution.
 `;
 
-
-export const handleUserMessage = async (userText, chatHistory = []) => {
+export const executeComputerTask = async (userText, chatHistory = []) => {
     if (!userText) {
         throw new CustomError("Message is required", 400);
     }
 
-    // 1. Build the conversation thread (System + History + New User Message)
     const messages = [
         { role: "system", content: MASTER_SYSTEM_PROMPT },
-        ...chatHistory, // Inject past memory here
+        ...chatHistory,
         { role: "user", content: userText }
     ];
 
-    // 2. FIRST LLM CALL: Ask Groq to reason and select a tool
     const response = await llmClient.chat.completions.create({
         model: "llama-3.3-70b-versatile",
         messages: messages,
@@ -231,18 +231,15 @@ export const handleUserMessage = async (userText, chatHistory = []) => {
 
     const message = response.choices[0].message;
 
-    // 3. THE LOOP: Did Groq choose a tool?
     if (message.tool_calls) {
         const toolCall = message.tool_calls[0];
         const args = JSON.parse(toolCall.function.arguments);
 
-        // A. Add Groq's tool request to the message history
         messages.push(message);
 
-        // B. Execute the system action (NOW IT WAITS FOR THE OS!)
+        // Wait for OS execution
         const resultJSON = await performWindowsAction(args.action, args.target);
         
-        // C. Add the OS result back into the history as a "tool" message
         messages.push({
             role: "tool",
             tool_call_id: toolCall.id,
@@ -250,25 +247,23 @@ export const handleUserMessage = async (userText, chatHistory = []) => {
             content: resultJSON 
         });
 
-        // 4. SECOND LLM CALL: Ask Groq to summarize the result for the user
+        // Final summary
         const finalResponse = await llmClient.chat.completions.create({
             model: "llama-3.3-70b-versatile",
             messages: messages
         });
 
-        // 5. Return everything nicely packaged for your frontend
         return {
-            type: "agent_response",
+            success: true,
             tool: toolCall.function.name,
             input: args,
             execution_result: JSON.parse(resultJSON),
-            message: finalResponse.choices[0].message.content
+            responseMessage: finalResponse.choices[0].message.content
         };
     }
 
-    // Fallback: If no tool was needed, just return the chat response
     return {
-        type: "chat",
-        message: message.content
+        success: false,
+        responseMessage: message.content
     };
 };

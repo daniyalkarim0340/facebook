@@ -1,136 +1,50 @@
+// controllar/systemActions.js
 import { exec } from "child_process";
-import { promisify } from "util"; // 1. Import promisify
+import util from "util";
 
-// 2. Convert callback-based exec into a Promise
-const execPromise = promisify(exec); 
+const execPromise = util.promisify(exec);
 
-// 3. Make the function async
 export default async function performWindowsAction(action, target) {
-    let command = "";
+    console.log(`[OS Execution] Action: ${action} | Target: ${target}`);
 
-    const apps = {
-        chrome: "start chrome",
-        edge: "start msedge",
-        firefox: "start firefox",
-        notepad: "start notepad",
-        calculator: "calc",
-        vscode: "code",
-        explorer: "explorer",
-        paint: "mspaint",
-        cmd: "cmd",
-        powershell: "powershell"
-    };
-
-    const websites = {
-        youtube: "https://www.youtube.com",
-        google: "https://www.google.com",
-        chatgpt: "https://chat.openai.com",
-        facebook: "https://www.facebook.com",
-        instagram: "https://www.instagram.com",
-        github: "https://github.com",
-        gmail: "https://mail.google.com"
-    };
-
-    const key = (target || "").toLowerCase();
-
-    // ========================
-    // 🧠 SYSTEM ACTIONS
-    // ========================
-    if (action === "system") {
-        if (key === "shutdown") {
-            command = "shutdown /s /t 0";
-        } else if (key === "restart") {
-            command = "shutdown /r /t 0";
-        } else if (key === "lock") {
-            command = "rundll32.exe user32.dll,LockWorkStation";
-        }
-    }
-
-    // ========================
-    // 💻 OPEN APP
-    // ========================
-    else if (action === "open_app") {
-        command = apps[key];
-    }
-
-    // ========================
-    // 🌐 OPEN WEBSITE
-    // ========================
-    else if (action === "open_website") {
-        const url = websites[key] || `https://www.${key}.com`;
-        command = `start ${url}`;
-    }
-
-    // ========================
-    // 📁 OPEN FOLDER
-    // ========================
-    else if (action === "open_folder") {
-        command = `explorer "${target}"`;
-    }
-
-    // ========================
-    // 🧠 ULTRA SMART FALLBACK
-    // ========================
-    if (!command) {
-        if (action === "open_app" && websites[key]) {
-            command = `start ${websites[key]}`;
-        }
-        else if (action === "open_app") {
-            command = `start https://www.${key}.com`;
-        }
-        else if (action === "open_website" && apps[key]) {
-            command = apps[key];
-        }
-    }
-
-    // ========================
-    // 🛡️ ULTRA SAFETY SYSTEM
-    // ========================
-    const dangerous = ["shutdown", "restart", "format", "delete", "wipe"];
-
-    if (action === "system" && dangerous.includes(key)) {
-        return JSON.stringify({
-            success: false,
-            blocked: true,
-            message: "⚠️ Safety system blocked this system command"
-        });
-    }
-
-    // ========================
-    // ❌ FINAL VALIDATION
-    // ========================
-    if (!command) {
-        return JSON.stringify({
-            success: false,
-            error: "Command not supported by system"
-        });
-    }
-
-    // ========================
-    // ⚡ EXECUTE COMMAND (UPDATED FOR LOOP)
-    // ========================
     try {
-        // 4. Wait for the OS to actually execute the command
-        await execPromise(command);
-        
-        console.log("Executed:", command);
-        
-        return JSON.stringify({
-            success: true,
-            action,
-            target,
-            message: `Executed ${action} → ${target}`
-        });
+        switch (action) {
+            case "open_app":
+                // Standard Windows command to start an application
+                await execPromise(`start ${target}`);
+                return JSON.stringify({ success: true, message: `Successfully opened app: ${target}` });
+
+            case "open_website":
+                // Sanitizes URL format if it doesn't already have http/https
+                const url = target.startsWith("http") ? target : `https://${target}.com`;
+                await execPromise(`start ${url}`);
+                return JSON.stringify({ success: true, message: `Successfully navigated to website: ${url}` });
+
+            case "open_folder":
+                // Standard Windows explorer command to open directory paths
+                await execPromise(`explorer "${target}"`);
+                return JSON.stringify({ success: true, message: `Successfully opened folder: ${target}` });
+
+            case "system":
+                if (target === "lock") {
+                    await execPromise("rundll32.exe user32.dll,LockWorkStation");
+                    return JSON.stringify({ success: true, message: "PC locked successfully." });
+                }
+                if (target === "restart") {
+                    await execPromise("shutdown /r /t 0");
+                    return JSON.stringify({ success: true, message: "PC restart sequence initiated." });
+                }
+                if (target === "shutdown") {
+                    await execPromise("shutdown /s /t 0");
+                    return JSON.stringify({ success: true, message: "PC shutdown sequence initiated." });
+                }
+                throw new Error(`Unknown system action: ${target}`);
+
+            default:
+                throw new Error(`Unsupported action type: ${action}`);
+        }
     } catch (error) {
-        // 5. Catch system errors (e.g., app not installed) so the AI knows!
-        console.error("Execution error:", error.message);
-        
-        return JSON.stringify({
-            success: false,
-            action,
-            target,
-            error: error.message,
-            message: `Failed to execute ${action} → ${target}`
-        });
+        console.error(`[OS Error] Failed executing ${action}:`, error.message);
+        return JSON.stringify({ success: false, error: error.message });
     }
 }

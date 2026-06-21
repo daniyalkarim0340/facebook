@@ -18,9 +18,17 @@ export const AGENT_IDS = {
   ANALYST: 'analyst',
   GENERAL: 'general',
   IMAGE: 'image',
+  COMPUTER: 'computer'
 };
 
 export const AGENTS = {
+ 
+  // ... your other agents
+  [AGENT_IDS.COMPUTER]: {
+    name: 'Computer Specialist',
+    description: 'Handles requests to write, execute, or debug code, and run system commands.',
+  },
+
   [AGENT_IDS.ROUTER]: {
     id: AGENT_IDS.ROUTER,
     name: 'Router Agent',

@@ -2,56 +2,32 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import {
-  Sparkles,
-  ArrowRight,
   Terminal,
   Cpu,
-  Globe2,
-  Fingerprint,
-  Zap,
-  MessageSquare,
   Shield,
+  Zap,
   ChevronRight,
+  Command,
+  Activity,
+  Layers,
+  Radio,
+  ArrowUpRight,
+  Database,
+  Globe,
+  Plus,
+  Minus,
+  CheckCircle2,
+  Server
 } from 'lucide-react';
 
-const FEATURES = [
-  {
-    icon: Terminal,
-    title: 'MERN Native Matrix',
-    desc: 'Full-stack pipelines built for instant cross-origin communication and seamless API integration.',
-    color: 'from-blue-500 to-cyan-400',
-  },
-  {
-    icon: Globe2,
-    title: 'Real-Time Search',
-    desc: 'Live web lookups powered by Llama agents that query the network layer in real time.',
-    color: 'from-emerald-500 to-teal-400',
-  },
-  {
-    icon: Fingerprint,
-    title: 'Token Protection',
-    desc: 'Cryptographic auth with secure session state across every workspace interaction.',
-    color: 'from-violet-500 to-purple-400',
-  },
-];
-
-const STATS = [
-  { value: '8+', label: 'AI Models' },
-  { value: '<2s', label: 'Avg Response' },
-  { value: '24/7', label: 'Uptime' },
-  { value: '100%', label: 'Encrypted' },
-];
-
-// Custom Easing Curves
-const easeCubic = [0.16, 1, 0.3, 1];
+const cubicBezierConfig = [0.16, 1, 0.3, 1];
 
 // ============================================================================
-// DYNAMIC KINETIC NEURAL MATRIX BACKGROUND ENGINE
+// BACKGROUND RAY-TRACER CANVASES
 // ============================================================================
-function NeuralMatrixBackground({ isAwakened }) {
+function QuantumGridBackground({ isActive }) {
   const canvasRef = useRef(null);
-  const mouseRef = useRef({ x: null, y: null, radius: 200 });
-  const viewScaleRef = useRef(2.5); // Start zoomed in for the intro sequence
+  const mouseCoords = useRef({ x: 0, y: 0, targetX: 0, targetY: 0, intensity: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -60,465 +36,591 @@ function NeuralMatrixBackground({ isAwakened }) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animationId;
-    let particles = [];
-    const particleCount = 80;
-    const connectionDist = 150;
-
-    const resize = () => {
+    let frameId;
+    const gridSpacing = 45;
+    
+    const handleResize = () => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
       ctx.scale(dpr, dpr);
     };
 
-    const initParticles = () => {
-      particles = [];
-      for (let i = 0; i < particleCount; i++) {
-        particles.push({
-          x: Math.random() * window.innerWidth,
-          y: Math.random() * window.innerHeight,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.4,
-          radius: Math.random() * 1.5 + 1,
-          phase: Math.random() * Math.PI * 2,
-          pulseSpeed: Math.random() * 0.02 + 0.005,
-        });
-      }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    const trackMouse = (e) => {
+      mouseCoords.current.targetX = e.clientX;
+      mouseCoords.current.targetY = e.clientY;
+      mouseCoords.current.intensity = 1;
     };
 
-    window.addEventListener('resize', resize);
-    resize();
-    initParticles();
+    window.addEventListener('mousemove', trackMouse);
+    document.addEventListener('mouseleave', () => { mouseCoords.current.intensity = 0; });
 
-    const handleMouseMove = (e) => {
-      mouseRef.current.x = e.clientX;
-      mouseRef.current.y = e.clientY;
-    };
-
-    const handleMouseLeave = () => {
-      mouseRef.current.x = null;
-      mouseRef.current.y = null;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseleave', handleMouseLeave);
-
-    const draw = () => {
+    const renderLoop = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
       ctx.clearRect(0, 0, w, h);
 
-      // Smoothly zoom camera scale out during awakening sequence
-      if (isAwakened) {
-        viewScaleRef.current += (1.0 - viewScaleRef.current) * 0.04;
-      }
+      mouseCoords.current.x += (mouseCoords.current.targetX - mouseCoords.current.x) * 0.08;
+      mouseCoords.current.y += (mouseCoords.current.targetY - mouseCoords.current.y) * 0.08;
 
-      ctx.save();
-      // Translate coordinates to center, apply scale matrix, translate back
-      ctx.translate(w / 2, h / 2);
-      ctx.scale(viewScaleRef.current, viewScaleRef.current);
-      ctx.translate(-w / 2, -h / 2);
+      ctx.strokeStyle = 'rgba(34, 211, 238, 0.03)';
+      ctx.lineWidth = 1;
 
-      // Render Node Networks
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.phase += p.pulseSpeed;
-
-        // Boundary collision tracking
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
-
-        // Mouse Gravitational Pull Interaction
-        if (mouseRef.current.x !== null) {
-          const dx = mouseRef.current.x - p.x;
-          const dy = mouseRef.current.y - p.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < mouseRef.current.radius) {
-            const force = (mouseRef.current.radius - dist) / mouseRef.current.radius;
-            p.x -= (dx / dist) * force * 0.5;
-            p.y -= (dy / dist) * force * 0.5;
-          }
-        }
-
-        const alpha = 0.15 + Math.sin(p.phase) * 0.1;
+      for (let y = 0; y < h; y += gridSpacing) {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(34, 211, 238, ${Math.max(0.05, alpha)})`;
-        ctx.fill();
-      });
-
-      // Render Synapse Web Connections
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const p1 = particles[i];
-          const p2 = particles[j];
-          const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-
-          if (dist < connectionDist) {
-            const alpha = (1 - dist / connectionDist) * 0.14;
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(99, 102, 241, ${alpha * (isAwakened ? 1 : 0.2)})`;
-            ctx.lineWidth = 0.6;
-            ctx.stroke();
+        for (let x = 0; x < w; x += 10) {
+          const distanceToMouse = Math.hypot(x - mouseCoords.current.x, y - mouseCoords.current.y);
+          let offset = 0;
+          if (distanceToMouse < 250) {
+            const influence = (250 - distanceToMouse) / 250;
+            offset = Math.sin(x * 0.01 + y) * 12 * influence * mouseCoords.current.intensity;
           }
+          if (x === 0) ctx.moveTo(x, y + offset);
+          else ctx.lineTo(x, y + offset);
         }
+        ctx.stroke();
       }
 
-      ctx.restore();
-      animationId = requestAnimationFrame(draw);
+      for (let x = 0; x < w; x += gridSpacing) {
+        ctx.beginPath();
+        for (let y = 0; y < h; y += 10) {
+          const distanceToMouse = Math.hypot(x - mouseCoords.current.x, y - mouseCoords.current.y);
+          let offset = 0;
+          if (distanceToMouse < 250) {
+            const influence = (250 - distanceToMouse) / 250;
+            offset = Math.cos(y * 0.01 + x) * 12 * influence * mouseCoords.current.intensity;
+          }
+          if (y === 0) ctx.moveTo(x + offset, y);
+          else ctx.lineTo(x + offset, y);
+        }
+        ctx.stroke();
+      }
+
+      frameId = requestAnimationFrame(renderLoop);
     };
 
-    draw();
-
+    renderLoop();
     return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
+      cancelAnimationFrame(frameId);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', trackMouse);
     };
-  }, [isAwakened]);
+  }, [isActive]);
 
-  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none w-full h-full z-0 opacity-80" />;
+  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />;
 }
 
 // ============================================================================
-// STAGGERED DECODER TEXT TYPING EFFECT
+// CHARACTER TYPOGRAPHY DECODER
 // ============================================================================
-function TypewriterHeading({ text, className }) {
-  const words = text.split(" ");
+function GlowDecodeText({ children, delayOffset = 0 }) {
+  const letters = children.split("");
   return (
-    <span className={className}>
-      {words.map((word, wordIdx) => (
-        <span key={wordIdx} className="inline-block whitespace-nowrap">
-          {word.split("").map((char, charIdx) => (
-            <motion.span
-              key={charIdx}
-              initial={{ opacity: 0, y: 15, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{
-                duration: 0.4,
-                delay: 1.8 + (wordIdx * 0.12) + (charIdx * 0.03),
-                ease: "easeOut"
-              }}
-              className="inline-block"
-            >
-              {char}
-            </motion.span>
-          ))}
-          <span>&nbsp;</span>
-        </span>
+    <span>
+      {letters.map((char, index) => (
+        <motion.span
+          key={index}
+          initial={{ opacity: 0, filter: 'blur(12px)', y: 20 }}
+          animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+          transition={{ duration: 0.8, delay: delayOffset + index * 0.02, ease: cubicBezierConfig }}
+          className="inline-block"
+        >
+          {char === " " ? "\u00A0" : char}
+        </motion.span>
       ))}
     </span>
   );
 }
 
 // ============================================================================
-// COMPONENT: MOCK CHAT INTERACTION PREVIEW
+// PIPELINE STREAM SIMULATOR
 // ============================================================================
-function MockChatPreview() {
+function LivePipelineConsole() {
+  const [logs, setLogs] = useState([
+    { id: 1, type: 'system', msg: 'System Core connection initialized successfully.' },
+  ]);
+
+  useEffect(() => {
+    const logPool = [
+      { type: 'process', msg: 'Streaming response weights via high-speed pipeline...' },
+      { type: 'success', msg: 'Vector alignment verified inside database node [0x92f]' },
+      { type: 'system', msg: 'Query lookups routed seamlessly through Llama inference layer.' },
+      { type: 'process', msg: 'Cross-origin pipeline state: Securing active session states.' },
+      { type: 'success', msg: 'Token validation encryption pass complete. State locked.' }
+    ];
+
+    const interval = setInterval(() => {
+      setLogs((prev) => {
+        const nextLog = logPool[Math.floor(Math.random() * logPool.length)];
+        const updated = [...prev, { id: Date.now(), ...nextLog }];
+        if (updated.length > 5) updated.shift();
+        return updated;
+      });
+    }, 2800);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.96, rotateX: 12 }}
-      animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-      transition={{ duration: 1.2, delay: 2.5, ease: easeCubic }}
-      className="relative w-full max-w-xl mx-auto mt-6 perspective-1000"
-    >
-      <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/10 via-violet-500/10 to-blue-500/10 rounded-3xl blur-3xl opacity-70" />
-      <div className="relative bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/60 bg-slate-950/60">
-          <div className="flex gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500/60" />
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
-          </div>
-          <span className="text-[10px] text-slate-500 font-mono tracking-wider">scholarly-ai — core_node_v4</span>
-          <div className="w-3.5" />
+    <div className="w-full bg-slate-950/70 border border-slate-900 rounded-2xl p-5 font-mono text-xs shadow-2xl relative overflow-hidden group">
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+      <div className="flex items-center justify-between pb-3 border-b border-slate-900 mb-4 text-[10px] text-slate-500 tracking-wider">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>LIVE PIPELINE DEEP TRACE</span>
         </div>
-        <div className="p-5 space-y-4 min-h-[220px] text-left">
-          <motion.div
-            initial={{ opacity: 0, x: 15 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 3.2, duration: 0.5 }}
-            className="flex justify-end"
-          >
-            <div className="bg-slate-800/80 text-slate-200 text-xs px-4 py-2.5 rounded-2xl rounded-tr-sm border border-slate-700/40 max-w-[80%] shadow-md">
-              Initialize structural analysis on quantum entanglement vector fields.
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: -15 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 3.8, duration: 0.6 }}
-            className="flex gap-3 items-start"
-          >
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-lg shadow-cyan-500/20">
-              AI
-            </div>
-            <div className="bg-slate-950/60 border border-slate-800/80 text-slate-300 text-xs px-4 py-3 rounded-2xl rounded-tl-sm max-w-[85%] leading-relaxed shadow-inner">
-              Matrix alignment verified. Entanglement data maps successfully stream processing via secure pipeline channels...
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 4.4 }}
-            className="flex gap-2 items-center pl-10"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-          </motion.div>
-        </div>
+        <span>MONITOR // ACTIVE</span>
       </div>
-    </motion.div>
+      <div className="space-y-2 min-h-[140px] text-left">
+        <AnimatePresence mode="popLayout">
+          {logs.map((log) => (
+            <motion.div
+              key={log.id}
+              initial={{ opacity: 0, x: -10, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, x: 10, filter: 'blur(4px)' }}
+              transition={{ duration: 0.4 }}
+              className="flex items-start gap-2.5"
+            >
+              <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded font-bold shrink-0 ${
+                log.type === 'system' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                log.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+              }`}>
+                {log.type}
+              </span>
+              <span className="text-slate-300 leading-relaxed text-[11px]">{log.msg}</span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }
 
 // ============================================================================
-// MAIN CORE INTERFACE PORTAL COMPONENT
+// SYSTEM PROTOCOLS FAQ ITEM
+// ============================================================================
+function ProtocolAccordionItem({ question, answer, isOpen, onToggle }) {
+  return (
+    <div className="border-b border-slate-900/80 overflow-hidden transition-colors duration-300">
+      <button
+        onClick={onToggle}
+        className="w-full py-5 flex items-center justify-between text-left focus:outline-none group"
+      >
+        <span className="text-sm font-bold text-slate-200 group-hover:text-cyan-400 transition-colors">{question}</span>
+        <div className="h-6 w-6 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 transition-transform duration-300">
+          {isOpen ? <Minus className="w-3.5 h-3.5 text-cyan-400" /> : <Plus className="w-3.5 h-3.5" />}
+        </div>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+          >
+            <p className="pb-5 text-xs text-slate-400 leading-relaxed max-w-3xl">{answer}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN APPLICATION ROUTER PORTAL
 // ============================================================================
 export default function HomePortal() {
   const navigate = useNavigate();
-  const [isAwakened, setIsAwakened] = useState(false);
-  const [showIntroScreen, setShowIntroScreen] = useState(true);
+  const [hasAssembled, setHasAssembled] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeFaq, setActiveFaq] = useState(null);
   
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, 90]);
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0.2]);
+  // Isolate scroll fading ONLY to the hero viewport text layout
+  const heroYAxisTransform = useTransform(scrollY, [0, 400], [0, -40]);
+  const heroAlphaFadeTransform = useTransform(scrollY, [0, 350], [1, 0]);
 
   useEffect(() => {
-    // Stage 1: Awakening Central Network Nodes
-    const awakenTimer = setTimeout(() => setIsAwakened(true), 400);
-    // Stage 2: Collapse Initial Loading Blind Curtain Overlay
-    const UIAssembleTimer = setTimeout(() => setShowIntroScreen(false), 1600);
-
-    return () => {
-      clearTimeout(awakenTimer);
-      clearTimeout(UIAssembleTimer);
-    };
+    const token = localStorage.getItem('token') || sessionStorage.getItem('userSession');
+    if (token) {
+      setIsAuthenticated(true);
+    }
+    const assemblyTimer = setTimeout(() => setHasAssembled(true), 100);
+    return () => clearTimeout(assemblyTimer);
   }, []);
 
+  const executeAuthProtectedRouting = (alternativeRoute) => {
+    if (isAuthenticated) {
+      navigate('/chat');
+    } else {
+      navigate(alternativeRoute);
+    }
+  };
+
+  const FAQS = [
+    { q: 'How does real-time node routing function?', a: 'Every query submitted down the pipeline automatically links directly with live edge-workers. It completely destroys traditional cold-starts by pre-allocating computing channels directly to user memory.' },
+    { q: 'Are data streams securely protected?', a: 'Absolutely. Session variables and query flows utilize cryptographically isolated memory spaces. No third-party engines ever get clear access to your core data records.' },
+    { q: 'Can I hook up my own custom REST APIs?', a: 'Yes. The interface engine scales elegantly over classic MERN connections. Simply inject your endpoint variables right into your workspace configurations panel.' }
+  ];
+
   return (
-    <div className="min-h-screen w-full bg-[#020617] text-white antialiased overflow-x-hidden font-sans relative selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="min-h-screen w-full bg-[#030712] text-slate-100 antialiased overflow-x-hidden font-sans relative selection:bg-cyan-500/20 selection:text-cyan-300">
       
-      {/* CINEMATIC APPARITION OVERLAY INTRO SCREEN */}
+      {/* SHIELDED INITIAL SYSTEM OVERLAY */}
       <AnimatePresence>
-        {showIntroScreen && (
+        {!hasAssembled && (
           <motion.div
-            exit={{ opacity: 0, filter: 'blur(20px)' }}
-            transition={{ duration: 0.8, ease: easeCubic }}
-            className="fixed inset-0 bg-[#020617] z-50 flex items-center justify-center pointer-events-none"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 bg-[#030712] z-50 flex items-center justify-center pointer-events-none"
           >
-            <motion.div
-              initial={{ scale: 0.3, opacity: 0 }}
-              animate={isAwakened ? { scale: [1, 1.8, 40], opacity: [0.2, 1, 0] } : { scale: 1, opacity: 0.4 }}
-              transition={{ duration: 1.4, ease: [0.76, 0, 0.24, 1] }}
-              className="w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_40px_10px_rgba(34,211,238,0.8)]"
-            />
+            <div className="flex flex-col items-center gap-3">
+              <Command className="w-6 h-6 text-cyan-400 animate-spin" />
+              <div className="text-[9px] uppercase tracking-[0.3em] text-slate-500 font-mono font-bold">Assembling System Parameters</div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* CORE BACKGROUND GRAPHICS NETWORKS */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[65vw] h-[65vw] rounded-full bg-blue-600/10 blur-[140px] mix-blend-screen" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-cyan-500/8 blur-[160px] mix-blend-screen" />
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(148,163,184,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.3) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
+      {/* AMBIENT VECTOR LIGHT LAYERS */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-40">
+        <div className="absolute top-[-25%] left-[-10%] w-[80vw] h-[80vw] rounded-full bg-gradient-to-br from-cyan-500/10 to-transparent blur-[160px]" />
+        <div className="absolute bottom-[-15%] right-[-5%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-tr from-indigo-600/10 to-transparent blur-[180px]" />
       </div>
 
-      <NeuralMatrixBackground isAwakened={isAwakened} />
+      <QuantumGridBackground isActive={hasAssembled} />
 
-      {/* NAVIGATION INTERFACE */}
+      {/* STICKY GLASS FRAME LAYOUT NAVIGATION */}
       <motion.nav
-        initial={{ opacity: 0, y: -25 }}
-        animate={!showIntroScreen ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.8, ease: easeCubic }}
-        className="relative z-40 flex h-16 items-center justify-between px-6 md:px-12 border-b border-slate-900 bg-slate-950/40 backdrop-blur-xl sticky top-0 shadow-lg shadow-black/10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={hasAssembled ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 1, ease: cubicBezierConfig }}
+        className="z-40 h-20 items-center justify-between px-6 md:px-12 bg-slate-950/25 backdrop-blur-xl border-b border-slate-900/60 sticky top-0 flex shadow-2xl shadow-black/20"
       >
-        <div className="flex items-center gap-2.5 cursor-default group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-md shadow-cyan-500/10 group-hover:rotate-12 transition-transform duration-300">
-            <Sparkles className="h-4 w-4 text-white" />
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
+          <div className="h-10 w-10 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-center relative overflow-hidden transition-all duration-300 group-hover:border-cyan-500/40 shadow-inner">
+            <Command className="h-4 w-4 text-cyan-400 transition-transform duration-500 group-hover:rotate-180" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-sm tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">Scholarly AI</span>
-            <span className="text-[9px] font-bold text-slate-500 tracking-widest uppercase -mt-0.5">Agent Core</span>
+            <span className="font-bold text-sm tracking-tight text-white">NOVA MATRIX</span>
+            <span className="text-[9px] font-bold text-cyan-500/80 tracking-[0.2em] uppercase -mt-0.5">Neural Cluster</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/login')}
-            className="text-xs font-semibold text-slate-400 hover:text-white transition-colors px-4 py-2 rounded-xl hover:bg-slate-900/50"
+            onClick={() => executeAuthProtectedRouting('/login')}
+            className="text-xs font-semibold text-slate-400 hover:text-white transition-colors px-4 py-2 rounded-xl hover:bg-slate-900/40"
           >
-            Log In
+            {isAuthenticated ? 'Enter Workspace' : 'Log In'}
           </button>
           <button
-            onClick={() => navigate('/register')}
-            className="relative overflow-hidden group text-xs font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-cyan-500/10 transition-transform active:scale-95"
+            onClick={() => executeAuthProtectedRouting('/register')}
+            className="relative overflow-hidden group text-xs font-semibold bg-white text-slate-950 px-5 py-2.5 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-95"
           >
-            {/* Glossy light-sweep sheen */}
-            <span className="absolute inset-0 w-1/2 h-full bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-shine" style={{ animationDuration: '1s' }} />
-            <span className="relative z-10">Get Started</span>
+            <span className="relative z-10 flex items-center gap-1.5 font-bold">
+              {isAuthenticated ? 'Launch Console' : 'Get Started'}
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </span>
           </button>
         </div>
       </motion.nav>
 
-      {/* MAIN HERO STAGE */}
-      <motion.main style={{ y: heroY, opacity: heroOpacity }} className="relative z-10">
-        <div className="flex flex-col items-center text-center px-6 max-w-5xl mx-auto pt-20 md:pt-28 pb-12 space-y-8">
-          
-          {/* Subheader Banner Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, filter: 'blur(4px)' }}
-            animate={!showIntroScreen ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : {}}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="inline-flex items-center gap-2 bg-slate-900/60 border border-slate-800 text-[10px] font-bold tracking-widest text-cyan-400 uppercase px-4 py-1.5 rounded-full shadow-inner"
-          >
-            <Cpu className="h-3 w-3 animate-pulse" />
-            Next-Gen AI Compute Infrastructure
-          </motion.div>
+      {/* CORE FRAMEWORK STAGE */}
+      <main className="relative z-10 pt-24 md:pt-32 px-6 max-w-6xl mx-auto flex flex-col items-center">
+        
+        {/* HERO LOGIC CONTAINER - (Scroll Transformations bound exclusively here) */}
+        <motion.div 
+          style={{ y: heroYAxisTransform, opacity: heroAlphaFadeTransform }}
+          className="flex flex-col items-center w-full"
+        >
+          <div className="inline-flex items-center gap-2 bg-slate-900/60 border border-slate-800/80 text-[10px] font-bold tracking-[0.2em] text-cyan-400 uppercase px-4 py-2 rounded-xl shadow-inner mb-8">
+            <Activity className="h-3 w-3 text-cyan-400 animate-pulse" />
+            SYSTEM LAYER V2.0 STABLE // ACTIVE
+          </div>
 
-          {/* Staggered Dynamic Typography */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1] max-w-4xl">
-            <TypewriterHeading text="The elite platform for" className="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent" />
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-center leading-[1.05] max-w-5xl">
+            <GlowDecodeText delayOffset={0.1}>Autonomous processing layers</GlowDecodeText>
             <br />
-            <TypewriterHeading text="autonomous AI workflows" className="bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent" />
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent">
+              <GlowDecodeText delayOffset={0.6}>for high-throughput workflows.</GlowDecodeText>
+            </span>
           </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={!showIntroScreen ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 2.2 }}
-            className="text-sm sm:text-base text-slate-400 max-w-2xl font-medium leading-relaxed"
-          >
-            Deploy premium Llama inference pipelines synchronized with real-time web search.
-            Built for developers who demand speed, state protection, and pristine experiences.
-          </motion.p>
+          <p className="text-slate-400 text-sm sm:text-base max-w-2xl text-center mt-8 font-medium leading-relaxed">
+             Orchestrate premium full-stack LLM operational architectures with zero cross-origin processing bottlenecks. High-speed distributed state machines explicitly structured for web interface architectures.
+          </p>
 
-          {/* Interactive Call-To-Action Operations */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 mt-10 w-full sm:w-auto">
+            <button
+              onClick={() => executeAuthProtectedRouting('/register')}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-4 text-xs font-bold uppercase tracking-wider text-white shadow-xl shadow-cyan-500/10 hover:shadow-cyan-500/20 active:scale-95 transition-all duration-300"
+            >
+              {isAuthenticated ? 'Open Active Terminal' : 'Initialize Stack'}
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => executeAuthProtectedRouting('/login')}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/20 backdrop-blur-md px-8 py-4 text-xs font-bold uppercase tracking-wider text-slate-300 hover:border-slate-700 hover:bg-slate-800/40 transition-all duration-300"
+            >
+              <Terminal className="h-4 w-4 text-slate-500" />
+              {isAuthenticated ? 'View Chat History' : 'System Authorization'}
+            </button>
+          </div>
+        </motion.div>
+
+        {/* PIPELINE LIVE TRACE ENVIRONMENT */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: cubicBezierConfig }}
+          className="w-full max-w-3xl mt-28 text-center"
+        >
+          <div className="text-[10px] tracking-[0.25em] font-bold uppercase text-slate-500 mb-4 flex items-center justify-center gap-2">
+            <Server className="w-3 h-3 text-cyan-400" /> LIVE ENVIRONMENT PIPELINES
+          </div>
+          <LivePipelineConsole />
+        </motion.div>
+
+        {/* SCROLL-REVEALED BENTO GRID FIELD */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-32">
+          
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={!showIntroScreen ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 2.4 }}
-            className="flex flex-col sm:flex-row items-center gap-4 pt-2 w-full sm:w-auto"
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.7, ease: cubicBezierConfig }}
+            whileHover={{ y: -6, borderColor: 'rgba(34, 211, 238, 0.25)' }}
+            className="group relative p-8 rounded-3xl bg-slate-900/10 border border-slate-900 backdrop-blur-xl transition-all duration-300 flex flex-col justify-between h-64 overflow-hidden shadow-2xl shadow-black/40"
           >
-            <button
-              onClick={() => navigate('/register')}
-              className="relative overflow-hidden group w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-cyan-500/20 active:scale-95 transition-transform"
-            >
-              <span className="absolute inset-0 w-1/2 h-full bg-white/15 transform -skew-x-12 -translate-x-full group-hover:animate-shine" />
-              Start Free Today
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button
-              onClick={() => navigate('/login')}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/30 backdrop-blur-sm px-7 py-3.5 text-sm font-semibold text-slate-300 hover:border-slate-700 hover:bg-slate-800/40 transition-colors"
-            >
-              <MessageSquare className="h-4 w-4 text-slate-500" />
-              Open Workspace
-            </button>
-          </motion.div>
-
-          <MockChatPreview />
-        </div>
-
-        {/* METRICS PLATFORM INTERFACE */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto px-6 py-14 border-y border-slate-900/80 bg-slate-950/20 backdrop-blur-[2px]">
-          {STATS.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.6, delay: i * 0.1, ease: easeCubic }}
-              className="text-center"
-            >
-              <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                {stat.value}
-              </p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mt-1">{stat.label}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* CORE CAPABILITIES MODULES */}
-        <section className="max-w-5xl mx-auto px-6 py-24">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-1.5 text-cyan-400 text-xs font-bold uppercase tracking-widest mb-3">
-              <Zap className="w-3.5 h-3.5 animate-pulse" /> Core Capabilities
+            <div className="h-11 w-11 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
+              <Layers className="w-5 h-5" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Everything you need to build with AI</h2>
+            <div>
+              <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                Distributed Vectors <span className="text-[9px] bg-cyan-500/10 text-cyan-400 font-mono px-1.5 py-0.5 rounded border border-cyan-500/20">DB</span>
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">High-density MERN vector streaming arrays natively optimized for sub-millisecond retrieval layers.</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.7, delay: 0.05, ease: cubicBezierConfig }}
+            whileHover={{ y: -6, borderColor: 'rgba(59, 130, 246, 0.25)' }}
+            className="group relative p-8 rounded-3xl bg-slate-900/10 border border-slate-900 backdrop-blur-xl transition-all duration-300 flex flex-col justify-between h-64 overflow-hidden shadow-2xl shadow-black/40"
+          >
+            <div className="h-11 w-11 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-blue-400 group-hover:scale-105 transition-transform">
+              <Radio className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                Zero-State Syncing <span className="text-[9px] bg-blue-500/10 text-blue-400 font-mono px-1.5 py-0.5 rounded border border-blue-500/20">Live</span>
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Bi-directional socket architectures keeping user matrix states locked and updated across nodes.</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.7, delay: 0.1, ease: cubicBezierConfig }}
+            whileHover={{ y: -6, borderColor: 'rgba(168, 85, 247, 0.25)' }}
+            className="group relative p-8 rounded-3xl bg-slate-900/10 border border-slate-900 backdrop-blur-xl transition-all duration-300 flex flex-col justify-between h-64 overflow-hidden shadow-2xl shadow-black/40"
+          >
+            <div className="h-11 w-11 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-purple-400 group-hover:scale-105 transition-transform">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                Token Enclaves <span className="text-[9px] bg-purple-500/10 text-purple-400 font-mono px-1.5 py-0.5 rounded border border-purple-500/20">Auth</span>
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Cryptographically signed authorization signatures safeguarding sensitive context pipelines.</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.8, ease: cubicBezierConfig }}
+            className="md:col-span-2 group relative p-8 rounded-3xl bg-slate-900/10 border border-slate-900 backdrop-blur-xl hover:border-cyan-500/20 transition-all duration-300 flex flex-col md:flex-row justify-between items-start md:items-center h-auto md:h-56 overflow-hidden shadow-2xl shadow-black/40 gap-6"
+          >
+            <div className="max-w-md">
+              <div className="h-10 w-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-cyan-400 mb-4">
+                <Database className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-bold text-white mb-2">Automated Execution Pipelines</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Trigger custom internal routines directly through automated agents. Built natively to prevent runtime leakage across external browser systems.</p>
+            </div>
+            <div className="bg-slate-950/60 border border-slate-800/60 rounded-xl p-4 font-mono text-[10px] text-slate-400 w-full md:w-auto shrink-0 shadow-inner">
+              <div className="text-cyan-400 mb-1">▶ run_agent_cluster</div>
+              <div>[STATUS] Pipeline allocated</div>
+              <div className="text-emerald-400">[SUCCESS] Vector sync: 100%</div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.8, delay: 0.05, ease: cubicBezierConfig }}
+            whileHover={{ borderColor: 'rgba(59, 130, 246, 0.2)' }}
+            className="group relative p-8 rounded-3xl bg-slate-900/10 border border-slate-900 backdrop-blur-xl transition-all duration-300 flex flex-col justify-between h-auto md:h-56 overflow-hidden shadow-2xl shadow-black/40"
+          >
+            <div className="h-10 w-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-blue-400">
+              <Globe className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white mb-2">Global Live Trace</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Instantly stream live network data pipelines with zero lag overhead or processing interruptions.</p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* COMPUTE ALLOCATION GRID TIER MODULES */}
+        <section className="w-full mt-36">
+          <div className="text-center mb-16">
+            <div className="text-[10px] tracking-[0.2em] font-bold uppercase text-cyan-400 mb-2 flex items-center justify-center gap-1.5">
+              <Zap className="w-3 h-3 animate-pulse" /> COMPUTE POWER DISTRIBUTIONS
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Sleek Compute Tiers</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {FEATURES.map((feature, i) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={feature.title}
-                  initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
-                  whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 0.8, delay: i * 0.15, ease: easeCubic }}
-                  whileHover={{ y: -5, border: '1px solid rgba(148, 163, 184, 0.15)', backgroundColor: 'rgba(15, 23, 42, 0.4)' }}
-                  className="group relative p-6 rounded-2xl bg-slate-900/20 border border-slate-900 transition-all duration-300 backdrop-blur-md shadow-lg"
-                >
-                  <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg shadow-black/20 mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-sm font-bold text-white mb-2">{feature.title}</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">{feature.desc}</p>
-                  <ChevronRight className="absolute bottom-6 right-6 w-4 h-4 text-slate-700 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
-                </motion.div>
-              );
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
+            
+            {/* Standard Compute Frame */}
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.8, ease: cubicBezierConfig }}
+              whileHover={{ y: -5, borderColor: 'rgba(255,255,255,0.1)' }}
+              className="bg-slate-900/10 border border-slate-900 rounded-3xl p-8 backdrop-blur-xl relative flex flex-col justify-between h-[400px] transition-all group shadow-2xl shadow-black/50"
+            >
+              <div>
+                <div className="text-xs font-mono text-slate-500 tracking-wider uppercase mb-1">Standard Compute</div>
+                <div className="text-2xl font-bold text-white flex items-baseline gap-1">
+                  $0 <span className="text-xs text-slate-500 font-normal">/ month</span>
+                </div>
+                <div className="space-y-3 mt-6">
+                  {['Standard processing pipelines', 'Isolated state environments', 'Basic token protection rules'].map((feat) => (
+                    <div key={feat} className="flex items-center gap-2.5 text-xs text-slate-400">
+                      <CheckCircle2 className="w-4 h-4 text-slate-700 group-hover:text-cyan-500 transition-colors" />
+                      <span>{feat}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => executeAuthProtectedRouting('/register')} className="w-full bg-slate-900/60 border border-slate-800/80 hover:bg-slate-800/50 hover:border-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl transition-all">
+                Initialize Free Layer
+              </button>
+            </motion.div>
+
+            {/* Enterprise Core Premium Frame */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.8, ease: cubicBezierConfig }}
+              whileHover={{ y: -5, scale: 1.01, borderColor: 'rgba(34, 211, 238, 0.4)' }}
+              className="bg-gradient-to-b from-cyan-500/[0.03] to-transparent border border-cyan-500/20 rounded-3xl p-8 backdrop-blur-xl relative flex flex-col justify-between h-[400px] shadow-2xl shadow-cyan-500/5 transition-all group"
+            >
+              <div className="absolute top-4 right-4 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[9px] uppercase font-bold px-2.5 py-1 rounded-md tracking-wider animate-pulse">
+                Max Priority
+              </div>
+              <div>
+                <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase mb-1">Enterprise Core</div>
+                <div className="text-2xl font-bold text-white flex items-baseline gap-1">
+                  $29 <span className="text-xs text-slate-500 font-normal">/ month</span>
+                </div>
+                <div className="space-y-3 mt-6">
+                  {['Unlimited distributed vectors', 'Live socket sync integrations', 'Cryptographic enclave shields', 'Priority multi-model pipelines'].map((feat) => (
+                    <div key={feat} className="flex items-center gap-2.5 text-xs text-slate-300">
+                      <CheckCircle2 className="w-4 h-4 text-cyan-500" />
+                      <span>{feat}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => executeAuthProtectedRouting('/register')} className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-xl shadow-cyan-500/10 hover:shadow-cyan-500/20 transition-all">
+                Provision Network Access
+              </button>
+            </motion.div>
           </div>
         </section>
 
-        {/* CALL TO ACTION CONTAINER */}
-        <section className="max-w-4xl mx-auto px-6 pb-28">
+        {/* CORE ACCORDION (FAQ MODULE) */}
+        <section className="w-full max-w-3xl mt-36 border-t border-slate-900/60 pt-24">
+          <div className="mb-10 text-left">
+            <div className="text-[10px] tracking-[0.2em] font-mono text-slate-500 uppercase mb-1">SECURITY & CAPABILITY ARRAYS</div>
+            <h2 className="text-lg font-bold text-white">System Protocols FAQ</h2>
+          </div>
+          <div className="flex flex-col">
+            {FAQS.map((faq, idx) => (
+              <ProtocolAccordionItem
+                key={idx}
+                question={faq.q}
+                answer={faq.a}
+                isOpen={activeFaq === idx}
+                onToggle={() => setActiveFaq(activeFaq === idx ? null : idx)}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* BRIGHT CRUCIAL CALL-TO-ACTION CONTAINER (100% PERMANENT VISIBILITY) */}
+        <section className="w-full max-w-4xl pb-32 mt-36">
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: easeCubic }}
-            className="relative overflow-hidden rounded-3xl border border-slate-900 bg-gradient-to-br from-slate-900/60 via-slate-950/40 to-slate-950 p-10 md:p-14 text-center backdrop-blur-sm"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.8, ease: cubicBezierConfig }}
+            className="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950/80 p-12 text-center backdrop-blur-xl shadow-2xl shadow-black"
           >
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-            <Shield className="w-10 h-10 text-cyan-400 mx-auto mb-4 opacity-80" />
-            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight mb-3">Ready to deploy your AI workspace?</h2>
-            <p className="text-slate-400 text-sm max-w-md mx-auto mb-8 leading-relaxed">
-              Join thousands of developers using Scholarly AI for research, coding pipelines, and real-time computation layers.
+            {/* Pulsing decorative radar ring animation frames */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-cyan-500/5 rounded-full pointer-events-none animate-ping" style={{ animationDuration: '4s' }} />
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
+
+            <Cpu className="w-8 h-8 text-cyan-400 mx-auto mb-4 opacity-80 animate-pulse" />
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight mb-3">Deploy your customized workspace instance</h2>
+            <p className="text-slate-400 text-xs max-w-sm mx-auto mb-8 leading-relaxed">
+              Connect runtime environments to live query processors instantly.
             </p>
+            
             <button
-              onClick={() => navigate('/register')}
-              className="relative overflow-hidden group inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold px-8 py-3.5 rounded-xl shadow-xl shadow-cyan-500/10 active:scale-95 transition-transform"
+              onClick={() => executeAuthProtectedRouting('/register')}
+              className="group relative inline-flex items-center gap-2 bg-white text-slate-950 font-bold text-xs uppercase tracking-wider px-8 py-4 rounded-xl transition-all duration-300 active:scale-95 hover:bg-slate-100 shadow-xl shadow-white/5 overflow-hidden"
             >
-              <span className="absolute inset-0 w-1/2 h-full bg-white/15 transform -skew-x-12 -translate-x-full group-hover:animate-shine" />
-              Create Free Account
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <span className="relative z-10 flex items-center gap-1.5">
+                {isAuthenticated ? 'Re-Open Terminal Session' : 'Provision Account'}
+                <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </span>
             </button>
           </motion.div>
         </section>
-      </motion.main>
 
-      {/* LAYOUT FOOTER MODULE */}
-      <footer className="relative z-10 border-t border-slate-950 px-6 md:px-12 py-6 flex flex-col sm:flex-row items-center justify-between text-[11px] font-medium text-slate-500 bg-slate-950/60 backdrop-blur-sm">
-        <div>© 2026 Scholarly AI Platform. Secure pipeline engine active.</div>
-        <div className="flex items-center gap-6 mt-3 sm:mt-0 text-xs">
-          <a href="#terms" className="hover:text-slate-300 transition-colors">Terms of Service</a>
-          <a href="#privacy" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
+      </main>
+
+      {/* FOOTER INTERFACE LAYER */}
+      <footer className="relative z-10 border-t border-slate-950 px-6 md:px-12 py-6 flex flex-col sm:flex-row items-center justify-between text-[10px] font-mono tracking-wider text-slate-500 bg-slate-950/60 backdrop-blur-md">
+        <div>© 2026 NOVA MATRIX LAYER. CHANNELS ENCRYPTED via AES-256.</div>
+        <div className="flex items-center gap-6 mt-3 sm:mt-0 uppercase">
+          <a href="#network" className="hover:text-cyan-400 transition-colors flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-ping" /> Node Status: Optimal
+          </a>
+          <a href="#docs" className="hover:text-slate-300 transition-colors">API Systems</a>
         </div>
       </footer>
     </div>

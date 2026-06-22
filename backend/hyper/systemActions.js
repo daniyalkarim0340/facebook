@@ -3,7 +3,6 @@ import { exec } from "child_process";
 import util from "util";
 import fs from "fs/promises";
 import path from "path";
-
 const execPromise = util.promisify(exec);
 
 export default async function performWindowsAction(action, target, extraArgs = {}) {

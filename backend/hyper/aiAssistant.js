@@ -9,7 +9,7 @@ import CustomError from "../authmiddleware/customerror.js";
 dotenv.config();
 
 const llmClient = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
+    apiKey: process.env.GROQ_API,
 });
 
 

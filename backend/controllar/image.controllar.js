@@ -4,7 +4,7 @@ import CustomError from '../handler/customerror.js';
 import cloudinary from '../config/cloudinary.js';
 import { ChatSession } from '../model/ai.model.js';
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_API_KEY = process.env.GROQ;
 
 /**
  * Helper utility to convert a Node.js memory buffer directly into a Cloudinary upload stream

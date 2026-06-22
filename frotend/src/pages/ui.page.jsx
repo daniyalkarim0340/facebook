@@ -240,24 +240,29 @@ export default function HomePortal() {
   const [hasAssembled, setHasAssembled] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
+        
   
   const { scrollY } = useScroll();
   // Isolate scroll fading ONLY to the hero viewport text layout
   const heroYAxisTransform = useTransform(scrollY, [0, 400], [0, -40]);
   const heroAlphaFadeTransform = useTransform(scrollY, [0, 350], [1, 0]);
 
-  useEffect(() => {
+ useEffect(() => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('userSession');
     if (token) {
+      // We ONLY set the auth state here. 
+      // We REMOVED the navigate() so you aren't forced off the homepage.
       setIsAuthenticated(true);
     }
+    
     const assemblyTimer = setTimeout(() => setHasAssembled(true), 100);
     return () => clearTimeout(assemblyTimer);
-  }, []);
+  }, []); // Good practice: you can leave navigate out of the dependency array if it's stable, but React strict mode prefers it included.
 
   const executeAuthProtectedRouting = (alternativeRoute) => {
     if (isAuthenticated) {
-      navigate('/chat');
+      // Standardized to '/ai' to match your main application route
+      navigate('/ai'); 
     } else {
       navigate(alternativeRoute);
     }

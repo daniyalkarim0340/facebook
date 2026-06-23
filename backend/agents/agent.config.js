@@ -3,8 +3,15 @@ export const AVAILABLE_MODELS = {
   'llama-3.1-8b-instant': { name: 'Llama 3.1 8B (Ultra Fast)', maxTokens: 2048 },
   'openai/gpt-oss-20b': { name: 'GPT-OSS 20B (Efficient)', maxTokens: 4096 },
   'qwen/qwen3-32b': { name: 'Qwen3 32B (Multilingual/Code)', maxTokens: 4096 },
+ 'qwen/qwen3.6-27b': {
+      name: 'Qwen 3.6 27B (Experimental)',
+      maxTokens: 4096,
+      disabled: true
+    },
   'meta-llama/llama-4-scout-17b-16e-instruct': { name: 'Llama 4 Scout (Agentic)', maxTokens: 4096 },
-  'gemma3:4b': { name: 'Gemma 3 4B (Local Ollama)', maxTokens: 5096 },
+    ollama: {
+    'gemma2:2b': { name: 'Gemma 2 2B (Local Ollama)', maxTokens: 2048 }
+  }
 };
 
 export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';

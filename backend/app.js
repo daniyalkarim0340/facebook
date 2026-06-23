@@ -7,6 +7,7 @@ import Airouter from "./route/ai.route.js";
 import ImageRouter from "./route/image.route.js";
 import AIrouter from "./route/aiassstiant.route.js";
 import errorMiddleware from "./authmiddleware/error.middleware.js";
+import Voiceroute from "./route/voice.router.js";
 
 dotenv.config();
 
@@ -78,6 +79,7 @@ app.use("/api/users", authroute);
 app.use("/api/ai", Airouter);
 app.use("/api/ai", ImageRouter);
 app.use("/api/ai",AIrouter)
+app.use("/api/ai",Voiceroute)
 // ERROR MIDDLEWARE
 // --------------------
 app.use(errorMiddleware);

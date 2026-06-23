@@ -1,19 +1,46 @@
 export const AVAILABLE_MODELS = {
-  'llama-3.3-70b-versatile': { name: 'Llama 3.3 70B (Powerful Reasoning)', maxTokens: 4096 },
-  'llama-3.1-8b-instant': { name: 'Llama 3.1 8B (Ultra Fast)', maxTokens: 2048 },
-  'openai/gpt-oss-20b': { name: 'GPT-OSS 20B (Efficient)', maxTokens: 4096 },
-  'qwen/qwen3-32b': { name: 'Qwen3 32B (Multilingual/Code)', maxTokens: 4096 },
- 'qwen/qwen3.6-27b': {
-      name: 'Qwen 3.6 27B (Experimental)',
-      maxTokens: 4096,
-      disabled: true
-    },
-  'meta-llama/llama-4-scout-17b-16e-instruct': { name: 'Llama 4 Scout (Agentic)', maxTokens: 4096 },
-    ollama: {
-    'gemma2:2b': { name: 'Gemma 2 2B (Local Ollama)', maxTokens: 2048 }
+  'llama-3.3-70b-versatile': {
+    name: 'Llama 3.3 70B (Powerful Reasoning)',
+    maxTokens: 4096
+  },
+
+  'llama-3.1-8b-instant': {
+    name: 'Llama 3.1 8B (Ultra Fast)',
+    maxTokens: 2048
+  },
+
+  'openai/gpt-oss-20b': {
+    name: 'GPT-OSS 20B',
+    maxTokens: 4096
+  },
+
+  'qwen/qwen3-32b': {
+    name: 'Qwen3 32B',
+    maxTokens: 4096
+  },
+
+  'qwen/qwen3-coder-480b-a35b-instruct': {
+    name: 'Qwen3 Coder 480B',
+    maxTokens: 4096
+  },
+
+  'z-ai/glm-5.1': {
+    name: 'GLM 5.1',
+    maxTokens: 16384
+  },
+
+  'meta-llama/llama-4-scout-17b-16e-instruct': {
+    name: 'Llama 4 Scout',
+    maxTokens: 4096
+  },
+
+  ollama: {
+    'gemma2:2b': {
+      name: 'Gemma 2 2B (Local)',
+      maxTokens: 2048
+    }
   }
 };
-
 export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 export const ROUTER_MODEL = 'llama-3.1-8b-instant';
 

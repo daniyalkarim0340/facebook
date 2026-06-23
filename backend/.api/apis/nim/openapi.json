@@ -1,0 +1,2333 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NVIDIA NIM API for qwen/qwen3-coder-480b-a35b-instruct",
+    "description": "The NVIDIA NIM REST API. Please see https://docs.api.nvidia.com/nim/reference/qwen-qwen3-coder-480b-a35b-instruct for more details.",
+    "version": "1.0.0",
+    "termsOfService": "https://www.nvidia.com/en-us/data-center/products/nvidia-ai-enterprise/eula/",
+    "contact": {
+      "name": "NVIDIA Enterprise Support",
+      "url": "https://www.nvidia.com/en-us/support/enterprise/"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://opensource.org/license/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://integrate.api.nvidia.com/v1/"
+    }
+  ],
+  "paths": {
+    "/chat/completions": {
+      "post": {
+        "operationId": "create_chat_completion_v1_chat_completions_post",
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Creates a model response for the given chat conversation.",
+        "description": "Given a list of messages comprising a conversation, the model will return a response. Compatible with OpenAI. See https://platform.openai.com/docs/api-reference/chat/create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "title": "Model",
+                    "default": "qwen/qwen3-coder-480b-a35b-instruct"
+                  },
+                  "messages": {
+                    "description": "A list of messages comprising the conversation so far. The roles of the messages must be alternating between `user` and `assistant`. The last input message should have role `user`. A message with the the `system` role is optional, and must be the very first message if it is present; `context` is also optional, but must come before a user question.",
+                    "examples": [
+                      [
+                        {
+                          "content": "I am going to Paris, what should I see?",
+                          "role": "user"
+                        }
+                      ]
+                    ],
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "role": {
+                          "description": "The role of the message author.",
+                          "enum": [
+                            "system",
+                            "context",
+                            "user",
+                            "assistant",
+                            "tool"
+                          ],
+                          "title": "Role",
+                          "type": "string"
+                        },
+                        "content": {
+                          "description": "The contents of the message.",
+                          "title": "Content",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "tool_call_id": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Tool Call Id",
+                          "description": "The id of the tool call."
+                        },
+                        "tool_calls": {
+                          "anyOf": [
+                            {
+                              "items": {
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "title": "Id"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "function"
+                                    ],
+                                    "const": "function",
+                                    "title": "Type",
+                                    "default": "function"
+                                  },
+                                  "function": {
+                                    "properties": {
+                                      "name": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ],
+                                        "title": "Name"
+                                      },
+                                      "arguments": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ],
+                                        "title": "Arguments"
+                                      }
+                                    },
+                                    "additionalProperties": false,
+                                    "type": "object",
+                                    "required": [
+                                      "name",
+                                      "arguments"
+                                    ],
+                                    "title": "FunctionCall"
+                                  }
+                                },
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "function"
+                                ],
+                                "title": "ToolCall"
+                              },
+                              "type": "array"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Tool Calls",
+                          "description": "The tool(s) called by the model."
+                        }
+                      },
+                      "required": [
+                        "role",
+                        "content"
+                      ],
+                      "title": "Message",
+                      "type": "object"
+                    },
+                    "title": "Messages",
+                    "type": "array"
+                  },
+                  "temperature": {
+                    "default": 0.7,
+                    "description": "The sampling temperature to use for text generation. The higher the temperature value is, the less deterministic the output text will be. It is not recommended to modify both temperature and top_p in the same call.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "title": "Temperature",
+                    "type": "number"
+                  },
+                  "top_p": {
+                    "default": 0.8,
+                    "description": "The top-p sampling mass used for text generation. The top-p value determines the probability mass that is sampled at sampling time. For example, if top_p = 0.2, only the most likely tokens (summing to 0.2 cumulative probability) will be sampled. It is not recommended to modify both temperature and top_p in the same call.",
+                    "maximum": 1,
+                    "exclusiveMinimum": 0,
+                    "title": "Top P",
+                    "type": "number"
+                  },
+                  "tools": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "function"
+                              ],
+                              "const": "function",
+                              "title": "Type",
+                              "default": "function"
+                            },
+                            "function": {
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "title": "Name"
+                                },
+                                "description": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "title": "Description"
+                                },
+                                "parameters": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "title": "Parameters"
+                                }
+                              },
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "name"
+                              ],
+                              "title": "FunctionDefinition"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "function"
+                          ],
+                          "title": "ChatCompletionToolsParam"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Tools"
+                  },
+                  "frequency_penalty": {
+                    "type": "number",
+                    "maximum": 2,
+                    "minimum": -2,
+                    "default": 0,
+                    "title": "Frequency Penalty",
+                    "description": "Indicates how much to penalize new tokens based on their existing frequency in the text so far, decreasing model likelihood to repeat the same line verbatim."
+                  },
+                  "presence_penalty": {
+                    "type": "number",
+                    "maximum": 2,
+                    "minimum": -2,
+                    "default": 0,
+                    "title": "Presence Penalty",
+                    "description": "Positive values penalize new tokens based on whether they appear in the text so far, increasing model likelihood to talk about new topics."
+                  },
+                  "max_tokens": {
+                    "default": 4096,
+                    "description": "The maximum number of tokens to generate in any given call. Note that the model is not aware of this value, and generation will simply stop at the number of tokens specified.",
+                    "maximum": 16384,
+                    "minimum": 1,
+                    "title": "Max Tokens",
+                    "type": "integer"
+                  },
+                  "stream": {
+                    "default": false,
+                    "description": "If set, partial message deltas will be sent. Tokens will be sent as data-only server-sent events (SSE) as they become available (JSON responses are prefixed by `data: `), with the stream terminated by a `data: [DONE]` message.",
+                    "title": "Stream",
+                    "type": "boolean"
+                  },
+                  "stop": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Stop",
+                    "description": "A string or a list of strings where the API will stop generating further tokens. The returned text will not contain the stop sequence."
+                  }
+                },
+                "required": [
+                  "messages"
+                ],
+                "title": "ChatRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Invocation is fulfilled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "id": {
+                      "description": "A unique identifier for the completion.",
+                      "format": "uuid",
+                      "title": "Id",
+                      "type": "string"
+                    },
+                    "choices": {
+                      "description": "The list of completion choices the model generated for the input prompt.",
+                      "items": {
+                        "properties": {
+                          "index": {
+                            "description": "The index of the choice in the list of choices (always 0).",
+                            "title": "Index",
+                            "type": "integer"
+                          },
+                          "message": {
+                            "allOf": [
+                              {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "role": {
+                                    "description": "The role of the message author.",
+                                    "enum": [
+                                      "system",
+                                      "context",
+                                      "user",
+                                      "assistant",
+                                      "tool"
+                                    ],
+                                    "title": "Role",
+                                    "type": "string"
+                                  },
+                                  "content": {
+                                    "description": "The contents of the message.",
+                                    "title": "Content",
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "tool_call_id": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "title": "Tool Call Id",
+                                    "description": "The id of the tool call."
+                                  },
+                                  "tool_calls": {
+                                    "anyOf": [
+                                      {
+                                        "items": {
+                                          "properties": {
+                                            "id": {
+                                              "type": "string",
+                                              "title": "Id"
+                                            },
+                                            "type": {
+                                              "type": "string",
+                                              "enum": [
+                                                "function"
+                                              ],
+                                              "const": "function",
+                                              "title": "Type",
+                                              "default": "function"
+                                            },
+                                            "function": {
+                                              "properties": {
+                                                "name": {
+                                                  "anyOf": [
+                                                    {
+                                                      "type": "string"
+                                                    },
+                                                    {
+                                                      "type": "null"
+                                                    }
+                                                  ],
+                                                  "title": "Name"
+                                                },
+                                                "arguments": {
+                                                  "anyOf": [
+                                                    {
+                                                      "type": "string"
+                                                    },
+                                                    {
+                                                      "type": "null"
+                                                    }
+                                                  ],
+                                                  "title": "Arguments"
+                                                }
+                                              },
+                                              "additionalProperties": false,
+                                              "type": "object",
+                                              "required": [
+                                                "name",
+                                                "arguments"
+                                              ],
+                                              "title": "FunctionCall"
+                                            }
+                                          },
+                                          "additionalProperties": false,
+                                          "type": "object",
+                                          "required": [
+                                            "function"
+                                          ],
+                                          "title": "ToolCall"
+                                        },
+                                        "type": "array"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "title": "Tool Calls",
+                                    "description": "The tool(s) called by the model."
+                                  }
+                                },
+                                "required": [
+                                  "role",
+                                  "content"
+                                ],
+                                "title": "Message",
+                                "type": "object"
+                              }
+                            ],
+                            "description": "A chat completion message generated by the model.",
+                            "examples": [
+                              {
+                                "content": "Ah, Paris, the City of Light! There are so many amazing things to see and do in this beautiful city ...",
+                                "role": "assistant"
+                              }
+                            ]
+                          },
+                          "finish_reason": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "stop",
+                                  "length",
+                                  "tool_calls"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null,
+                            "description": "The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, or `length` if the maximum number of tokens specified in the request was reached.",
+                            "examples": [
+                              "stop"
+                            ],
+                            "title": "Finish Reason"
+                          }
+                        },
+                        "required": [
+                          "index",
+                          "message"
+                        ],
+                        "title": "Choice",
+                        "type": "object"
+                      },
+                      "title": "Choices",
+                      "type": "array"
+                    },
+                    "usage": {
+                      "allOf": [
+                        {
+                          "properties": {
+                            "completion_tokens": {
+                              "description": "Number of tokens in the generated completion.",
+                              "examples": [
+                                25
+                              ],
+                              "title": "Completion Tokens",
+                              "type": "integer"
+                            },
+                            "prompt_tokens": {
+                              "description": "Number of tokens in the prompt.",
+                              "examples": [
+                                9
+                              ],
+                              "title": "Prompt Tokens",
+                              "type": "integer"
+                            },
+                            "total_tokens": {
+                              "description": "Total number of tokens used in the request (prompt + completion).",
+                              "examples": [
+                                34
+                              ],
+                              "title": "Total Tokens",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "completion_tokens",
+                            "prompt_tokens",
+                            "total_tokens"
+                          ],
+                          "title": "Usage",
+                          "type": "object"
+                        }
+                      ],
+                      "description": "Usage statistics for the completion request."
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "choices",
+                    "usage"
+                  ],
+                  "title": "ChatCompletion",
+                  "type": "object"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "properties": {
+                    "id": {
+                      "description": "A unique identifier for the completion.",
+                      "format": "uuid",
+                      "title": "Id",
+                      "type": "string"
+                    },
+                    "choices": {
+                      "description": "The list of completion choices the model generated for the input prompt.",
+                      "items": {
+                        "properties": {
+                          "index": {
+                            "description": "The index of the choice in the list of choices (always 0).",
+                            "title": "Index",
+                            "type": "integer"
+                          },
+                          "delta": {
+                            "allOf": [
+                              {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "role": {
+                                    "description": "The role of the message author.",
+                                    "enum": [
+                                      "system",
+                                      "context",
+                                      "user",
+                                      "assistant",
+                                      "tool"
+                                    ],
+                                    "title": "Role",
+                                    "type": "string"
+                                  },
+                                  "content": {
+                                    "description": "The contents of the message.",
+                                    "title": "Content",
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "tool_call_id": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "title": "Tool Call Id",
+                                    "description": "The id of the tool call."
+                                  },
+                                  "tool_calls": {
+                                    "anyOf": [
+                                      {
+                                        "items": {
+                                          "properties": {
+                                            "id": {
+                                              "type": "string",
+                                              "title": "Id"
+                                            },
+                                            "type": {
+                                              "type": "string",
+                                              "enum": [
+                                                "function"
+                                              ],
+                                              "const": "function",
+                                              "title": "Type",
+                                              "default": "function"
+                                            },
+                                            "function": {
+                                              "properties": {
+                                                "name": {
+                                                  "anyOf": [
+                                                    {
+                                                      "type": "string"
+                                                    },
+                                                    {
+                                                      "type": "null"
+                                                    }
+                                                  ],
+                                                  "title": "Name"
+                                                },
+                                                "arguments": {
+                                                  "anyOf": [
+                                                    {
+                                                      "type": "string"
+                                                    },
+                                                    {
+                                                      "type": "null"
+                                                    }
+                                                  ],
+                                                  "title": "Arguments"
+                                                }
+                                              },
+                                              "additionalProperties": false,
+                                              "type": "object",
+                                              "required": [
+                                                "name",
+                                                "arguments"
+                                              ],
+                                              "title": "FunctionCall"
+                                            }
+                                          },
+                                          "additionalProperties": false,
+                                          "type": "object",
+                                          "required": [
+                                            "function"
+                                          ],
+                                          "title": "ToolCall"
+                                        },
+                                        "type": "array"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "title": "Tool Calls",
+                                    "description": "The tool(s) called by the model."
+                                  }
+                                },
+                                "required": [
+                                  "role",
+                                  "content"
+                                ],
+                                "title": "Message",
+                                "type": "object"
+                              }
+                            ],
+                            "description": "A chat completion delta generated by streamed model responses.",
+                            "examples": [
+                              {
+                                "content": "Ah,",
+                                "role": "assistant"
+                              }
+                            ]
+                          },
+                          "finish_reason": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "stop",
+                                  "length",
+                                  "tool_calls"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null,
+                            "description": "The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, or `length` if the maximum number of tokens specified in the request was reached. Will be `null` if the model has not finished generating.",
+                            "title": "Finish Reason"
+                          }
+                        },
+                        "required": [
+                          "index",
+                          "delta"
+                        ],
+                        "title": "ChoiceChunk",
+                        "type": "object"
+                      },
+                      "title": "Choices",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "choices"
+                  ],
+                  "title": "ChatCompletionChunk",
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Result is pending. Client should poll using the requestId.\n",
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {}
+              }
+            },
+            "headers": {
+              "NVCF-REQID": {
+                "description": "requestId required for pooling",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "NVCF-STATUS": {
+                "description": "Invocation status",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed, provided entity could not be processed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Error title"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "Error status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed information about the error"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "Function instance used to invoke the request"
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "UUID of the request"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance",
+                    "requestId"
+                  ],
+                  "title": "InvokeError"
+                },
+                "example": {
+                  "type": "urn:nvcf-worker-service:problem-details:unprocessable-entity",
+                  "title": "Unprocessable Entity",
+                  "status": 422,
+                  "detail": "string",
+                  "instance": "/v2/nvcf/pexec/functions/4a58c6cb-a9b4-4014-99de-3e704d4ae687",
+                  "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The invocation ended with an error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Error title"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "Error status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed information about the error"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "Function instance used to invoke the request"
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "UUID of the request"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance",
+                    "requestId"
+                  ],
+                  "title": "InvokeError"
+                },
+                "example": {
+                  "type": "urn:nvcf-worker-service:problem-details:internal-server-error",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "string",
+                  "instance": "/v2/nvcf/pexec/functions/4a58c6cb-a9b4-4014-99de-3e704d4ae687",
+                  "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              }
+            }
+          }
+        },
+        "x-nvai-meta": {
+          "name": "Create chat completion",
+          "returns": "Returns a [chat completion](/docs/api-reference/chat/object) object, or a streamed sequence of [chat completion chunk](/docs/api-reference/chat/streaming) objects if the request is streamed.\n",
+          "path": "create",
+          "examples": [
+            {
+              "name": "Write a quick sort algorithm.",
+              "requestJson": "{\n      \"model\": \"qwen/qwen3-coder-480b-a35b-instruct\",\n      \"messages\": [\n        {\n          \"role\": \"user\",\n          \"content\": \"Write a quick sort algorithm.\"\n        }\n      ],\n      \"top_p\": 0.8,\n      \"temperature\": 0.7,\n      \"max_tokens\": 1024,\n      \"seed\": 21,\n      \"stream\": true\n}\n",
+              "responseJson": "{\n  \"id\": \"id-123\",\n  \"object\": \"chat.completion\",\n  \"created\": 1677652288,\n  \"model\": \"qwen/qwen3-coder-480b-a35b-instruct\",\n  \"system_fingerprint\": \"fp_44709d6fcb\",\n  \"choices\": [{\n    \"index\": 0,\n    \"message\": {\n      \"role\": \"assistant\",\n      \"content\": \"The python functions...\"\n    },\n    \"finish_reason\": \"stop\"\n  }],\n  \"usage\": {\n    \"prompt_tokens\": 9,\n    \"completion_tokens\": 12,\n    \"total_tokens\": 21\n  }\n}\n"
+            },
+            {
+              "name": "Write a piece of quicksort code in C++.",
+              "requestJson": "{\n      \"model\": \"qwen/qwen3-coder-480b-a35b-instruct\",\n      \"messages\": [\n        {\n          \"role\": \"user\",\n          \"content\": \"Write a piece of quicksort code in C++.\"\n        }\n      ],\n      \"top_p\": 0.8,\n      \"temperature\":0.7,\n      \"max_tokens\": 1024,\n      \"seed\": 21,\n      \"stream\": true\n}\n",
+              "responseJson": "{\n  \"id\": \"id-123\",\n  \"object\": \"chat.completion\",\n  \"created\": 1677652288,\n  \"model\": \"qwen/qwen3-coder-480b-a35b-instruct\",\n  \"system_fingerprint\": \"fp_44709d6fcb\",\n  \"choices\": [{\n    \"index\": 0,\n    \"message\": {\n      \"role\": \"assistant\",\n      \"content\": \"At NVIDIA's GPU Technology Conference (GTC)...\"\n    },\n    \"finish_reason\": \"stop\"\n  }],\n  \"usage\": {\n    \"prompt_tokens\": 9,\n    \"completion_tokens\": 12,\n    \"total_tokens\": 21\n  }\n}\n"
+            }
+          ],
+          "templates": [
+            {
+              "title": "No Streaming",
+              "requestEjs": {
+                "python": "from openai import OpenAI\n\nclient = OpenAI(\n  base_url = \"https://integrate.api.nvidia.com/v1\",\n  api_key = \"$NVIDIA_API_KEY\"\n)\n<% if (request.tools) { %>\ncompletion = client.chat.completions.create(\n  model=\"<%- request.model %>\",\n  messages=<%- JSON.stringify(request.messages) %>,\n  temperature=<%- request.temperature %>,\n  top_p=<%- request.top_p %>,\n  max_tokens=<%- request.max_tokens %>,\n  stream=<%- request.stream?.toString()[0].toUpperCase() + request.stream?.toString().slice(1) %>,\n  tools=<%- JSON.stringify(request.tools) %>,\n  <% if (request.tool_choice) { %>tool_choice=<%- JSON.stringify(request.tool_choice) %><% } %>\n)<% } else { %>\ncompletion = client.chat.completions.create(\n  model=\"<%- request.model %>\",\n  messages=<%- JSON.stringify(request.messages) %>,\n  temperature=<%- request.temperature %>,\n  top_p=<%- request.top_p %>,\n  max_tokens=<%- request.max_tokens %>,\n  stream=<%- request.stream?.toString()[0].toUpperCase() + request.stream?.toString().slice(1) %>\n)<% } %>\n<% if (request.stream) { %>\nfor chunk in completion:\n  if chunk.choices[0].delta.content is not None:\n    print(chunk.choices[0].delta.content, end=\"\")\n<% } else { %>\nprint(completion.choices[0].message)\n<% } %>\n",
+                "langChain": "from langchain_nvidia_ai_endpoints import ChatNVIDIA\n\nclient = ChatNVIDIA(\n  model=\"<%- request.model %>\",\n  api_key=\"$NVIDIA_API_KEY\", \n  temperature=<%- request.temperature %>,\n  top_p=<%- request.top_p %>,\n  max_tokens=<%- request.max_tokens %>,\n)\n<% if (request.stream) { %>\nfor chunk in client.stream(<%- JSON.stringify(request.messages) %>): \n  print(chunk.content, end=\"\")\n<% } else { %>\nresponse = client.invoke(<%- JSON.stringify(request.messages) %>)\nprint(response.content)\n<% } %>\n  \n",
+                "node.js": "import OpenAI from 'openai';\n\nconst openai = new OpenAI({\n  apiKey: '$NVIDIA_API_KEY',\n  baseURL: 'https://integrate.api.nvidia.com/v1',\n})\n <% if (request.tools) { %>\nasync function main() {\n  const completion = await openai.chat.completions.create({\n    model: \"<%- request.model %>\",\n    messages: <%- JSON.stringify(request.messages) %>,\n    temperature: <%- request.temperature %>,\n    top_p: <%- request.top_p %>,\n    max_tokens: <%- request.max_tokens %>,\n    stream: <%- request.stream %>,\n    <% if (request.tools) { %>tools: <%- JSON.stringify(request.tools) %>,<% } %>\n    <% if (request.tool_choice) { %>tool_choice: <%- JSON.stringify(request.tool_choice) %>,<% } %>\n  })<% } else { %>\nasync function main() {\n  const completion = await openai.chat.completions.create({\n    model: \"<%- request.model %>\",\n    messages: <%- JSON.stringify(request.messages) %>,\n    temperature: <%- request.temperature %>,\n    top_p: <%- request.top_p %>,\n    max_tokens: <%- request.max_tokens %>,\n    stream: <%- request.stream %>\n  })<% } %>\n   <% if (request.stream) { %>\n  for await (const chunk of completion) {\n    process.stdout.write(chunk.choices[0]?.delta?.content || '')\n  }\n  <% } else { %>\n  process.stdout.write(completion.choices[0]?.message?.content);\n  <% } %>\n}\n\nmain();",
+                "curl": "<% if (request.tools) { %>\n  \"curl https://integrate.api.nvidia.com/v1/chat/completions \\\\\\n\n    -H \\\"Content-Type: application/json\\\" \\\\\\n\n    -H \\\"Authorization: Bearer $NVIDIA_API_KEY\\\" \\\\\\n\n    -d '{\\n\n      \\\"model\\\": \\\"qwen/qwen3-coder-480b-a35b-instruct\\\",\\n\n      \\\"messages\\\": <%- JSON.stringify(request.messages).replaceAll(\\\"'\\\", \\\"'\\\\\\\"'\\\\\\\"'\\\") %>,\\n\n      \\\"temperature\\\": <%- request.temperature %>,\\n\n      \\\"top_p\\\": <%- request.top_p %>,\\n\n      \\\"max_tokens\\\": <%- request.max_tokens %>,\\n\n      \\\"stream\\\": <%- request.stream %>\n      <% if (request.tools) { %>,\\n    \\\"tools\\\": <%- JSON.stringify(request.tools).replaceAll(\\\"'\\\", \\\"'\\\\\\\"'\\\\\\\"'\\\") %><% } %>\n      <% if (request.tool_choice) { %>,\\n    \\\"tool_choice\\\": <%- JSON.stringify(request.tool_choice).replaceAll(\\\"'\\\", \\\"'\\\\\\\"'\\\\\\\"'\\\") %><% } %>\n    }'\\n\"<% } else { %>\n  \"curl https://integrate.api.nvidia.com/v1/chat/completions \\\\\\n\n    -H \\\"Content-Type: application/json\\\" \\\\\\n\n    -H \\\"Authorization: Bearer $NVIDIA_API_KEY\\\" \\\\\\n\n    -d '{\\n\n      \\\"model\\\": \\\"qwen/qwen3-coder-480b-a35b-instruct\\\",\\n\n      \\\"messages\\\": <%- JSON.stringify(request.messages).replaceAll(\\\"'\\\", \\\"'\\\\\\\"'\\\\\\\"'\\\") %>,\\n\n      \\\"temperature\\\": <%- request.temperature %>,\\n\n      \\\"top_p\\\": <%- request.top_p %>,\\n\n      \\\"max_tokens\\\": <%- request.max_tokens %>,\\n\n      \\\"stream\\\": <%- request.stream %>\n      <% if (request.tools) { %>,\\n    \\\"tools\\\": <%- JSON.stringify(request.tools).replaceAll(\\\"'\\\", \\\"'\\\\\\\"'\\\\\\\"'\\\") %><% } %>\n      <% if (request.tool_choice) { %>,\\n    \\\"tool_choice\\\": <%- JSON.stringify(request.tool_choice).replaceAll(\\\"'\\\", \\\"'\\\\\\\"'\\\\\\\"'\\\") %><% } %>\n    }'\\n\"<% } %>"
+              },
+              "response": "{\n  \"id\": \"chatcmpl-123\",\n  \"object\": \"chat.completion\",\n  \"created\": 1677652288,\n  \"model\": \"qwen/qwen3-coder-480b-a35b-instruct\",\n  \"system_fingerprint\": \"fp_44709d6fcb\",\n  \"choices\": [{\n    \"index\": 0,\n    \"message\": {\n      \"role\": \"assistant\",\n      \"content\": \"\\n\\nHello there, how may I assist you today?\",\n    },\n    \"finish_reason\": \"stop\"\n  }],\n  \"usage\": {\n    \"prompt_tokens\": 9,\n    \"completion_tokens\": 12,\n    \"total_tokens\": 21\n  }\n}\n"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "Token": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "Token": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "Errors": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Error type"
+          },
+          "title": {
+            "type": "string",
+            "description": "Error title"
+          },
+          "status": {
+            "type": "integer",
+            "description": "Error status code"
+          },
+          "detail": {
+            "type": "string",
+            "description": "Detailed information about the error"
+          },
+          "instance": {
+            "type": "string",
+            "description": "Function instance used to invoke the request"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of the request"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "instance",
+          "requestId"
+        ],
+        "title": "InvokeError"
+      },
+      "ChatCompletion": {
+        "properties": {
+          "id": {
+            "description": "A unique identifier for the completion.",
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "choices": {
+            "description": "The list of completion choices the model generated for the input prompt.",
+            "items": {
+              "properties": {
+                "index": {
+                  "description": "The index of the choice in the list of choices (always 0).",
+                  "title": "Index",
+                  "type": "integer"
+                },
+                "message": {
+                  "allOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "role": {
+                          "description": "The role of the message author.",
+                          "enum": [
+                            "system",
+                            "context",
+                            "user",
+                            "assistant",
+                            "tool"
+                          ],
+                          "title": "Role",
+                          "type": "string"
+                        },
+                        "content": {
+                          "description": "The contents of the message.",
+                          "title": "Content",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "tool_call_id": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Tool Call Id",
+                          "description": "The id of the tool call."
+                        },
+                        "tool_calls": {
+                          "anyOf": [
+                            {
+                              "items": {
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "title": "Id"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "function"
+                                    ],
+                                    "const": "function",
+                                    "title": "Type",
+                                    "default": "function"
+                                  },
+                                  "function": {
+                                    "properties": {
+                                      "name": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ],
+                                        "title": "Name"
+                                      },
+                                      "arguments": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ],
+                                        "title": "Arguments"
+                                      }
+                                    },
+                                    "additionalProperties": false,
+                                    "type": "object",
+                                    "required": [
+                                      "name",
+                                      "arguments"
+                                    ],
+                                    "title": "FunctionCall"
+                                  }
+                                },
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "function"
+                                ],
+                                "title": "ToolCall"
+                              },
+                              "type": "array"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Tool Calls",
+                          "description": "The tool(s) called by the model."
+                        }
+                      },
+                      "required": [
+                        "role",
+                        "content"
+                      ],
+                      "title": "Message",
+                      "type": "object"
+                    }
+                  ],
+                  "description": "A chat completion message generated by the model.",
+                  "examples": [
+                    {
+                      "content": "Ah, Paris, the City of Light! There are so many amazing things to see and do in this beautiful city ...",
+                      "role": "assistant"
+                    }
+                  ]
+                },
+                "finish_reason": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "stop",
+                        "length",
+                        "tool_calls"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, or `length` if the maximum number of tokens specified in the request was reached.",
+                  "examples": [
+                    "stop"
+                  ],
+                  "title": "Finish Reason"
+                }
+              },
+              "required": [
+                "index",
+                "message"
+              ],
+              "title": "Choice",
+              "type": "object"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "usage": {
+            "allOf": [
+              {
+                "properties": {
+                  "completion_tokens": {
+                    "description": "Number of tokens in the generated completion.",
+                    "examples": [
+                      25
+                    ],
+                    "title": "Completion Tokens",
+                    "type": "integer"
+                  },
+                  "prompt_tokens": {
+                    "description": "Number of tokens in the prompt.",
+                    "examples": [
+                      9
+                    ],
+                    "title": "Prompt Tokens",
+                    "type": "integer"
+                  },
+                  "total_tokens": {
+                    "description": "Total number of tokens used in the request (prompt + completion).",
+                    "examples": [
+                      34
+                    ],
+                    "title": "Total Tokens",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "completion_tokens",
+                  "prompt_tokens",
+                  "total_tokens"
+                ],
+                "title": "Usage",
+                "type": "object"
+              }
+            ],
+            "description": "Usage statistics for the completion request."
+          }
+        },
+        "required": [
+          "id",
+          "choices",
+          "usage"
+        ],
+        "title": "ChatCompletion",
+        "type": "object"
+      },
+      "ChatCompletionChunk": {
+        "properties": {
+          "id": {
+            "description": "A unique identifier for the completion.",
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "choices": {
+            "description": "The list of completion choices the model generated for the input prompt.",
+            "items": {
+              "properties": {
+                "index": {
+                  "description": "The index of the choice in the list of choices (always 0).",
+                  "title": "Index",
+                  "type": "integer"
+                },
+                "delta": {
+                  "allOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "role": {
+                          "description": "The role of the message author.",
+                          "enum": [
+                            "system",
+                            "context",
+                            "user",
+                            "assistant",
+                            "tool"
+                          ],
+                          "title": "Role",
+                          "type": "string"
+                        },
+                        "content": {
+                          "description": "The contents of the message.",
+                          "title": "Content",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "tool_call_id": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Tool Call Id",
+                          "description": "The id of the tool call."
+                        },
+                        "tool_calls": {
+                          "anyOf": [
+                            {
+                              "items": {
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "title": "Id"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "function"
+                                    ],
+                                    "const": "function",
+                                    "title": "Type",
+                                    "default": "function"
+                                  },
+                                  "function": {
+                                    "properties": {
+                                      "name": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ],
+                                        "title": "Name"
+                                      },
+                                      "arguments": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ],
+                                        "title": "Arguments"
+                                      }
+                                    },
+                                    "additionalProperties": false,
+                                    "type": "object",
+                                    "required": [
+                                      "name",
+                                      "arguments"
+                                    ],
+                                    "title": "FunctionCall"
+                                  }
+                                },
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "function"
+                                ],
+                                "title": "ToolCall"
+                              },
+                              "type": "array"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Tool Calls",
+                          "description": "The tool(s) called by the model."
+                        }
+                      },
+                      "required": [
+                        "role",
+                        "content"
+                      ],
+                      "title": "Message",
+                      "type": "object"
+                    }
+                  ],
+                  "description": "A chat completion delta generated by streamed model responses.",
+                  "examples": [
+                    {
+                      "content": "Ah,",
+                      "role": "assistant"
+                    }
+                  ]
+                },
+                "finish_reason": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "stop",
+                        "length",
+                        "tool_calls"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, or `length` if the maximum number of tokens specified in the request was reached. Will be `null` if the model has not finished generating.",
+                  "title": "Finish Reason"
+                }
+              },
+              "required": [
+                "index",
+                "delta"
+              ],
+              "title": "ChoiceChunk",
+              "type": "object"
+            },
+            "title": "Choices",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "choices"
+        ],
+        "title": "ChatCompletionChunk",
+        "type": "object"
+      },
+      "ChatRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": "qwen/qwen3-coder-480b-a35b-instruct"
+          },
+          "messages": {
+            "description": "A list of messages comprising the conversation so far. The roles of the messages must be alternating between `user` and `assistant`. The last input message should have role `user`. A message with the the `system` role is optional, and must be the very first message if it is present; `context` is also optional, but must come before a user question.",
+            "examples": [
+              [
+                {
+                  "content": "I am going to Paris, what should I see?",
+                  "role": "user"
+                }
+              ]
+            ],
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "role": {
+                  "description": "The role of the message author.",
+                  "enum": [
+                    "system",
+                    "context",
+                    "user",
+                    "assistant",
+                    "tool"
+                  ],
+                  "title": "Role",
+                  "type": "string"
+                },
+                "content": {
+                  "description": "The contents of the message.",
+                  "title": "Content",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "tool_call_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Tool Call Id",
+                  "description": "The id of the tool call."
+                },
+                "tool_calls": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "title": "Id"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "function"
+                            ],
+                            "const": "function",
+                            "title": "Type",
+                            "default": "function"
+                          },
+                          "function": {
+                            "properties": {
+                              "name": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "title": "Name"
+                              },
+                              "arguments": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "title": "Arguments"
+                              }
+                            },
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "name",
+                              "arguments"
+                            ],
+                            "title": "FunctionCall"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "type": "object",
+                        "required": [
+                          "function"
+                        ],
+                        "title": "ToolCall"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Tool Calls",
+                  "description": "The tool(s) called by the model."
+                }
+              },
+              "required": [
+                "role",
+                "content"
+              ],
+              "title": "Message",
+              "type": "object"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "temperature": {
+            "default": 0.7,
+            "description": "The sampling temperature to use for text generation. The higher the temperature value is, the less deterministic the output text will be. It is not recommended to modify both temperature and top_p in the same call.",
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Temperature",
+            "type": "number"
+          },
+          "top_p": {
+            "default": 0.8,
+            "description": "The top-p sampling mass used for text generation. The top-p value determines the probability mass that is sampled at sampling time. For example, if top_p = 0.2, only the most likely tokens (summing to 0.2 cumulative probability) will be sampled. It is not recommended to modify both temperature and top_p in the same call.",
+            "maximum": 1,
+            "exclusiveMinimum": 0,
+            "title": "Top P",
+            "type": "number"
+          },
+          "tools": {
+            "anyOf": [
+              {
+                "items": {
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "function"
+                      ],
+                      "const": "function",
+                      "title": "Type",
+                      "default": "function"
+                    },
+                    "function": {
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "title": "Name"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Description"
+                        },
+                        "parameters": {
+                          "anyOf": [
+                            {
+                              "type": "object"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Parameters"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "name"
+                      ],
+                      "title": "FunctionDefinition"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "function"
+                  ],
+                  "title": "ChatCompletionToolsParam"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tools"
+          },
+          "frequency_penalty": {
+            "type": "number",
+            "maximum": 2,
+            "minimum": -2,
+            "default": 0,
+            "title": "Frequency Penalty",
+            "description": "Indicates how much to penalize new tokens based on their existing frequency in the text so far, decreasing model likelihood to repeat the same line verbatim."
+          },
+          "presence_penalty": {
+            "type": "number",
+            "maximum": 2,
+            "minimum": -2,
+            "default": 0,
+            "title": "Presence Penalty",
+            "description": "Positive values penalize new tokens based on whether they appear in the text so far, increasing model likelihood to talk about new topics."
+          },
+          "max_tokens": {
+            "default": 4096,
+            "description": "The maximum number of tokens to generate in any given call. Note that the model is not aware of this value, and generation will simply stop at the number of tokens specified.",
+            "maximum": 16384,
+            "minimum": 1,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "stream": {
+            "default": false,
+            "description": "If set, partial message deltas will be sent. Tokens will be sent as data-only server-sent events (SSE) as they become available (JSON responses are prefixed by `data: `), with the stream terminated by a `data: [DONE]` message.",
+            "title": "Stream",
+            "type": "boolean"
+          },
+          "stop": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop",
+            "description": "A string or a list of strings where the API will stop generating further tokens. The returned text will not contain the stop sequence."
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "ChatRequest",
+        "type": "object"
+      },
+      "Choice": {
+        "properties": {
+          "index": {
+            "description": "The index of the choice in the list of choices (always 0).",
+            "title": "Index",
+            "type": "integer"
+          },
+          "message": {
+            "allOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "role": {
+                    "description": "The role of the message author.",
+                    "enum": [
+                      "system",
+                      "context",
+                      "user",
+                      "assistant",
+                      "tool"
+                    ],
+                    "title": "Role",
+                    "type": "string"
+                  },
+                  "content": {
+                    "description": "The contents of the message.",
+                    "title": "Content",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "tool_call_id": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Tool Call Id",
+                    "description": "The id of the tool call."
+                  },
+                  "tool_calls": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "title": "Id"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "function"
+                              ],
+                              "const": "function",
+                              "title": "Type",
+                              "default": "function"
+                            },
+                            "function": {
+                              "properties": {
+                                "name": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "title": "Name"
+                                },
+                                "arguments": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "title": "Arguments"
+                                }
+                              },
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "name",
+                                "arguments"
+                              ],
+                              "title": "FunctionCall"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "function"
+                          ],
+                          "title": "ToolCall"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Tool Calls",
+                    "description": "The tool(s) called by the model."
+                  }
+                },
+                "required": [
+                  "role",
+                  "content"
+                ],
+                "title": "Message",
+                "type": "object"
+              }
+            ],
+            "description": "A chat completion message generated by the model.",
+            "examples": [
+              {
+                "content": "Ah, Paris, the City of Light! There are so many amazing things to see and do in this beautiful city ...",
+                "role": "assistant"
+              }
+            ]
+          },
+          "finish_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "stop",
+                  "length",
+                  "tool_calls"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, or `length` if the maximum number of tokens specified in the request was reached.",
+            "examples": [
+              "stop"
+            ],
+            "title": "Finish Reason"
+          }
+        },
+        "required": [
+          "index",
+          "message"
+        ],
+        "title": "Choice",
+        "type": "object"
+      },
+      "ChoiceChunk": {
+        "properties": {
+          "index": {
+            "description": "The index of the choice in the list of choices (always 0).",
+            "title": "Index",
+            "type": "integer"
+          },
+          "delta": {
+            "allOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "role": {
+                    "description": "The role of the message author.",
+                    "enum": [
+                      "system",
+                      "context",
+                      "user",
+                      "assistant",
+                      "tool"
+                    ],
+                    "title": "Role",
+                    "type": "string"
+                  },
+                  "content": {
+                    "description": "The contents of the message.",
+                    "title": "Content",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "tool_call_id": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Tool Call Id",
+                    "description": "The id of the tool call."
+                  },
+                  "tool_calls": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "title": "Id"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "function"
+                              ],
+                              "const": "function",
+                              "title": "Type",
+                              "default": "function"
+                            },
+                            "function": {
+                              "properties": {
+                                "name": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "title": "Name"
+                                },
+                                "arguments": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "title": "Arguments"
+                                }
+                              },
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "name",
+                                "arguments"
+                              ],
+                              "title": "FunctionCall"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "function"
+                          ],
+                          "title": "ToolCall"
+                        },
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Tool Calls",
+                    "description": "The tool(s) called by the model."
+                  }
+                },
+                "required": [
+                  "role",
+                  "content"
+                ],
+                "title": "Message",
+                "type": "object"
+              }
+            ],
+            "description": "A chat completion delta generated by streamed model responses.",
+            "examples": [
+              {
+                "content": "Ah,",
+                "role": "assistant"
+              }
+            ]
+          },
+          "finish_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "stop",
+                  "length",
+                  "tool_calls"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, or `length` if the maximum number of tokens specified in the request was reached. Will be `null` if the model has not finished generating.",
+            "title": "Finish Reason"
+          }
+        },
+        "required": [
+          "index",
+          "delta"
+        ],
+        "title": "ChoiceChunk",
+        "type": "object"
+      },
+      "Message": {
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "description": "The role of the message author.",
+            "enum": [
+              "system",
+              "context",
+              "user",
+              "assistant",
+              "tool"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "content": {
+            "description": "The contents of the message.",
+            "title": "Content",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tool_call_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Call Id",
+            "description": "The id of the tool call."
+          },
+          "tool_calls": {
+            "anyOf": [
+              {
+                "items": {
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "title": "Id"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "function"
+                      ],
+                      "const": "function",
+                      "title": "Type",
+                      "default": "function"
+                    },
+                    "function": {
+                      "properties": {
+                        "name": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Name"
+                        },
+                        "arguments": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Arguments"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "arguments"
+                      ],
+                      "title": "FunctionCall"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "function"
+                  ],
+                  "title": "ToolCall"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Calls",
+            "description": "The tool(s) called by the model."
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "Message",
+        "type": "object"
+      },
+      "ToolCall": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "function"
+            ],
+            "const": "function",
+            "title": "Type",
+            "default": "function"
+          },
+          "function": {
+            "properties": {
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Name"
+              },
+              "arguments": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Arguments"
+              }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "name",
+              "arguments"
+            ],
+            "title": "FunctionCall"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "function"
+        ],
+        "title": "ToolCall"
+      },
+      "FunctionCall": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "arguments": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arguments"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "arguments"
+        ],
+        "title": "FunctionCall"
+      },
+      "ChatCompletionToolsParam": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "function"
+            ],
+            "const": "function",
+            "title": "Type",
+            "default": "function"
+          },
+          "function": {
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "Name"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Description"
+              },
+              "parameters": {
+                "anyOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Parameters"
+              }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "title": "FunctionDefinition"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "function"
+        ],
+        "title": "ChatCompletionToolsParam"
+      },
+      "ChatCompletionNamedFunction": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ChatCompletionNamedFunction"
+      },
+      "ChatCompletionNamedToolChoiceParam": {
+        "properties": {
+          "function": {
+            "properties": {
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Name"
+              }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "title": "ChatCompletionNamedFunction"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "function"
+            ],
+            "const": "function",
+            "title": "Type",
+            "default": "function"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "function"
+        ],
+        "title": "ChatCompletionNamedToolChoiceParam"
+      },
+      "FunctionDefinition": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "parameters": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parameters"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "FunctionDefinition"
+      },
+      "Usage": {
+        "properties": {
+          "completion_tokens": {
+            "description": "Number of tokens in the generated completion.",
+            "examples": [
+              25
+            ],
+            "title": "Completion Tokens",
+            "type": "integer"
+          },
+          "prompt_tokens": {
+            "description": "Number of tokens in the prompt.",
+            "examples": [
+              9
+            ],
+            "title": "Prompt Tokens",
+            "type": "integer"
+          },
+          "total_tokens": {
+            "description": "Total number of tokens used in the request (prompt + completion).",
+            "examples": [
+              34
+            ],
+            "title": "Total Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "completion_tokens",
+          "prompt_tokens",
+          "total_tokens"
+        ],
+        "title": "Usage",
+        "type": "object"
+      }
+    }
+  }
+}

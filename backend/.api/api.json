@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "nim",
+      "source": "@nim/v1.0#rpbno51amf2w3364",
+      "integrity": "sha512-99ub3IXOjSyxTdYLnSrw/BXEXHlC351jQq5EcD4zsa5aWRTHhIBoiEkoyeN5QCvSG6tyDnDb3+WgHgKm5zRqEA==",
+      "installerVersion": "6.1.3"
+    }
+  ]
+}

@@ -134,3 +134,41 @@ export const understandImage = asyncHandler(async (req, res, next) => {
     return next(new CustomError(500, `Vision Processing Failed: ${errorMessage}`));
   }
 });
+
+
+
+
+
+
+
+
+
+
+// const openai = new OpenAI({
+//   apiKey: '$NVIDIA_API_KEY',
+//   baseURL: 'https://integrate.api.nvidia.com/v1',
+// })
+ 
+// async function main() {
+//   const completion = await openai.chat.completions.create({
+//     model: "z-ai/glm-5.1",
+//     messages: [{"role":"user","content":""}],
+//     temperature: 1,
+//     top_p: 1,
+//     max_tokens: 16384,
+    
+//     stream: true
+//   })
+   
+//   for await (const chunk of completion) {
+//         process.stdout.write(chunk.choices[0]?.delta?.content || '')
+    
+//   }
+  
+// }
+
+// main();
+
+
+
+// https://build.nvidia.com/z-ai/glm-5.1

@@ -11,10 +11,20 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// ================= HUGGING FACE ROUTER =================
+// ================= HUGGING FACE =================
 const hf = new OpenAI({
   apiKey: process.env.HF_TOKEN,
   baseURL: 'https://router.huggingface.co/v1',
+});
+
+// ================= OPENROUTER =================
+const openrouter = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: 'https://openrouter.ai/api/v1',
+  defaultHeaders: {
+    'HTTP-Referer': 'http://localhost:3000',
+    'X-Title': 'My AI Chatbot',
+  },
 });
 
 export async function completeChat({
@@ -32,7 +42,7 @@ export async function completeChat({
       maxTokens ?? modelConfig?.maxTokens ?? 1024;
 
     // =====================================================
-    // OLLAMA MODELS (LOCAL)
+    // OLLAMA (LOCAL MODELS)
     // =====================================================
     if (modelConfig?.provider === 'ollama') {
       const result = await ollama.chat({
@@ -49,7 +59,7 @@ export async function completeChat({
     }
 
     // =====================================================
-    // HUGGING FACE MODELS (NEW REPLACEMENT FOR NVIDIA)
+    // HUGGING FACE MODELS
     // =====================================================
     const hfModels = [
       'deepseek-ai/DeepSeek-V4-Pro:novita',
@@ -71,7 +81,33 @@ export async function completeChat({
     }
 
     // =====================================================
-    // GROQ MODELS (CLOUD)
+    // OPENROUTER MODELS (NEW)
+    // =====================================================
+    const openrouterModels = [
+      'deepseek/deepseek-chat',
+      'openai/gpt-oss-20b',
+      'meta-llama/llama-3-8b',
+      'mistralai/mixtral',
+      'qwen/qwen2.5'
+    ];
+
+    if (openrouterModels.includes(model)) {
+      const completion = await openrouter.chat.completions.create({
+        model,
+        messages,
+        temperature,
+        top_p: 0.9,
+        max_tokens: tokenLimit,
+        ...(jsonMode && {
+          response_format: { type: 'json_object' },
+        }),
+      });
+
+      return completion.choices[0].message.content;
+    }
+
+    // =====================================================
+    // GROQ MODELS (DEFAULT CLOUD)
     // =====================================================
     const completion = await groq.chat.completions.create({
       model,

@@ -1,49 +1,52 @@
 export const AVAILABLE_MODELS = {
+  // ================= GROQ =================
   'llama-3.3-70b-versatile': {
     name: 'Llama 3.3 70B (Powerful Reasoning)',
-    maxTokens: 4096
+    maxTokens: 4096,
+    provider: 'groq'
   },
 
   'llama-3.1-8b-instant': {
     name: 'Llama 3.1 8B (Ultra Fast)',
-    maxTokens: 2048
+    maxTokens: 2048,
+    provider: 'groq'
   },
 
   'openai/gpt-oss-20b': {
     name: 'GPT-OSS 20B',
-    maxTokens: 4096
+    maxTokens: 4096,
+    provider: 'groq'
   },
 
   'qwen/qwen3-32b': {
     name: 'Qwen3 32B',
-    maxTokens: 4096
-  },
-
-  'qwen/qwen3-coder-480b-a35b-instruct': {
-    name: 'Qwen3 Coder 480B',
-    maxTokens: 4096
-  },
-
-  'z-ai/glm-5.1': {
-    name: 'GLM 5.1',
-    maxTokens: 16384
+    maxTokens: 4096,
+    provider: 'groq'
   },
 
   'meta-llama/llama-4-scout-17b-16e-instruct': {
     name: 'Llama 4 Scout',
-    maxTokens: 4096
+    maxTokens: 4096,
+    provider: 'groq'
   },
 
-  ollama: {
-    'gemma2:2b': {
-      name: 'Gemma 2 2B (Local)',
-      maxTokens: 2048
-    }
+  // ================= HUGGING FACE =================
+  'deepseek-ai/DeepSeek-V4-Pro:novita': {
+    name: 'DeepSeek V4 Pro (HF Router)',
+    maxTokens: 4096,
+    provider: 'huggingface'
+  },
+
+  // ================= OLLAMA =================
+  'gemma2:2b': {
+    name: 'Gemma 2 2B (Local)',
+    maxTokens: 2048,
+    provider: 'ollama'
   }
 };
+
 export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 export const ROUTER_MODEL = 'llama-3.1-8b-instant';
-
 export const AGENT_IDS = {
   ROUTER: 'router',
   RESEARCH: 'research',

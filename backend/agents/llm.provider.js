@@ -6,15 +6,15 @@ import { AVAILABLE_MODELS, DEFAULT_MODEL } from './agent.config.js';
 
 dotenv.config();
 
-// Groq Client
+// ================= GROQ =================
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// NVIDIA Client
-const nvidia = new OpenAI({
-  apiKey: process.env.NVIDIA_API_KEY,
-  baseURL: 'https://integrate.api.nvidia.com/v1',
+// ================= HUGGING FACE ROUTER =================
+const hf = new OpenAI({
+  apiKey: process.env.HF_TOKEN,
+  baseURL: 'https://router.huggingface.co/v1',
 });
 
 export async function completeChat({
@@ -32,7 +32,7 @@ export async function completeChat({
       maxTokens ?? modelConfig?.maxTokens ?? 1024;
 
     // =====================================================
-    // OLLAMA MODELS
+    // OLLAMA MODELS (LOCAL)
     // =====================================================
     if (modelConfig?.provider === 'ollama') {
       const result = await ollama.chat({
@@ -49,16 +49,14 @@ export async function completeChat({
     }
 
     // =====================================================
-    // NVIDIA MODELS
+    // HUGGING FACE MODELS (NEW REPLACEMENT FOR NVIDIA)
     // =====================================================
-    const nvidiaModels = [
-      'qwen/qwen3-32b',
-      'qwen/qwen3-coder-480b-a35b-instruct',
-      'z-ai/glm-5.1',
+    const hfModels = [
+      'deepseek-ai/DeepSeek-V4-Pro:novita',
     ];
 
-    if (nvidiaModels.includes(model)) {
-      const completion = await nvidia.chat.completions.create({
+    if (hfModels.includes(model)) {
+      const completion = await hf.chat.completions.create({
         model,
         messages,
         temperature,
@@ -73,7 +71,7 @@ export async function completeChat({
     }
 
     // =====================================================
-    // GROQ MODELS
+    // GROQ MODELS (CLOUD)
     // =====================================================
     const completion = await groq.chat.completions.create({
       model,

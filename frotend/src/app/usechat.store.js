@@ -26,21 +26,80 @@ const useChatStore = create(
       selectedAgent: null,
       availableAgents: [],
 
-      availableModels: [
-        { id: 'llama-3.3-70b-versatile', name: '🦙 Llama 3.3 70B (Powerful)', provider: 'Groq', speed: 'Fast' },
-        { id: 'llama-3.1-8b-instant', name: '⚡ Llama 3.1 8B (Fast)', provider: 'Groq', speed: 'Very Fast' },
-        { id: 'openai/gpt-oss-20b', name: '🚀 GPT-OSS 20B (Efficient)', provider: 'Groq', speed: 'Very Fast' },
-        { id: 'qwen/qwen3-32b', name: '🐉 Qwen3 32B (Multilingual)', provider: 'Groq', speed: 'Fast' },
-         {
+    availableModels: [
+  // ================= GROQ =================
+  {
+    id: 'llama-3.3-70b-versatile',
+    name: '🦙 Llama 3.3 70B (Powerful)',
+    provider: 'Groq',
+    speed: 'Fast'
+  },
+  {
+    id: 'llama-3.1-8b-instant',
+    name: '⚡ Llama 3.1 8B (Fast)',
+    provider: 'Groq',
+    speed: 'Very Fast'
+  },
+  {
+    id: 'openai/gpt-oss-20b',
+    name: '🚀 GPT-OSS 20B (Efficient)',
+    provider: 'Groq',
+    speed: 'Very Fast'
+  },
+  {
+    id: 'qwen/qwen3-32b',
+    name: '🐉 Qwen3 32B (Multilingual)',
+    provider: 'Groq',
+    speed: 'Fast'
+  },
+  {
     id: 'qwen/qwen3.6-27b',
     name: '🧪 Qwen 3.6 27B (Experimental - Disabled)',
-    provider: 'groq',
-   speed:"good"
-   
+    provider: 'Groq',
+    speed: 'Good',
+    disabled: true
   },
-        { id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: '👁️ Llama 4 Scout (Agentic)', provider: 'Groq', speed: 'Very Fast' },
-  { id: 'gemma2:2b', name: '💻 Gemma 2 2B (Local Ollama)', provider: 'Ollama', speed: 'Fast' }// Added local Gemma model here
-      ],
+  {
+    id: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    name: '👁️ Llama 4 Scout (Agentic)',
+    provider: 'Groq',
+    speed: 'Very Fast'
+  },
+
+  // ================= NVIDIA (NEW) =================
+  {
+    id: 'qwen/qwen3-32b',
+    name: '🐉 Qwen3 32B (NVIDIA)',
+    provider: 'NVIDIA',
+    speed: 'Fast'
+  },
+  {
+    id: 'qwen/qwen3-coder-480b-a35b-instruct',
+    name: '💻 Qwen3 Coder 480B (Best Coding)',
+    provider: 'NVIDIA',
+    speed: 'Medium'
+  },
+  {
+    id: 'z-ai/glm-5.1',
+    name: '🧠 GLM 5.1 (Advanced Reasoning)',
+    provider: 'NVIDIA',
+    speed: 'Medium'
+  },
+
+  // ================= OLLAMA =================
+  {
+    id: 'gemma2:2b',
+    name: '💻 Gemma 2 2B (Local Ollama)',
+    provider: 'Ollama',
+    speed: 'Fast'
+  },
+  {
+    id: 'gemma3:4b',
+    name: '⚡ Gemma 3 4B (Local Ollama)',
+    provider: 'Ollama',
+    speed: 'Fast'
+  }
+],
       
       setSelectedModel: (model) => set({ selectedModel: model }),
       setSelectedAgent: (agent) => set({ selectedAgent: agent }),

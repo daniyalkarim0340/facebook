@@ -17,7 +17,9 @@ export const registerUser = async (userData) => {
 // -------------------
 export const loginUser = async (userData) => {
   try {
-    const response = await api.post("/users/login", userData);
+    const response = await api.post("/users/login", userData, {
+      withCredentials: true, // IMPORTANT for refresh cookie
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || new Error("Network Error");
@@ -29,7 +31,9 @@ export const loginUser = async (userData) => {
 // -------------------
 export const logoutUser = async () => {
   try {
-    const response = await api.post("/users/logout");
+    const response = await api.post("/users/logout", {}, {
+      withCredentials: true,
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || new Error("Network Error");
@@ -41,18 +45,22 @@ export const logoutUser = async () => {
 // -------------------
 export const refreshToken = async () => {
   try {
-    const response = await api.post("/users/refresh-token");
+    const response = await api.post("/users/refresh-token", {}, {
+      withCredentials: true, // VERY IMPORTANT
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || new Error("Network Error");
   }
 };
 
-export const resendOtp  = async (data) => {
+// -------------------
+// OTP
+// -------------------
+export const resendOtp = async (data) => {
   const res = await api.post("/resend-otp", data);
   return res.data;
 };
-
 
 export const verifyOtp = async (data) => {
   const res = await api.post("/users/verify-otp", data);

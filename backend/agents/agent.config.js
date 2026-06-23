@@ -1,5 +1,5 @@
 export const AVAILABLE_MODELS = {
-  // ================= GROQ =================
+  // ================= GROQ (ONLY REAL MODELS) =================
   'llama-3.3-70b-versatile': {
     name: 'Llama 3.3 70B (Powerful Reasoning)',
     maxTokens: 4096,
@@ -12,20 +12,14 @@ export const AVAILABLE_MODELS = {
     provider: 'groq'
   },
 
-  'openai/gpt-oss-20b': {
-    name: 'GPT-OSS 20B',
+  'mixtral-8x7b-32768': {
+    name: 'Mixtral 8x7B (Fast Reasoning)',
     maxTokens: 4096,
     provider: 'groq'
   },
 
-  'qwen/qwen3-32b': {
-    name: 'Qwen3 32B',
-    maxTokens: 4096,
-    provider: 'groq'
-  },
-
-  'meta-llama/llama-4-scout-17b-16e-instruct': {
-    name: 'Llama 4 Scout',
+  'llama3-70b-8192': {
+    name: 'Llama 3 70B (Stable)',
     maxTokens: 4096,
     provider: 'groq'
   },
@@ -41,6 +35,12 @@ export const AVAILABLE_MODELS = {
   'gemma2:2b': {
     name: 'Gemma 2 2B (Local)',
     maxTokens: 2048,
+    provider: 'ollama'
+  },
+
+  'gemma3:4b': {
+    name: 'Gemma 3 4B (Local)',
+    maxTokens: 4096,
     provider: 'ollama'
   }
 };

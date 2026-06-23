@@ -26,7 +26,7 @@ const useChatStore = create(
       selectedAgent: null,
       availableAgents: [],
 
-    availableModels: [
+ availableModels: [
   // ================= GROQ =================
   {
     id: 'llama-3.3-70b-versatile',
@@ -53,36 +53,17 @@ const useChatStore = create(
     speed: 'Fast'
   },
   {
-    id: 'qwen/qwen3.6-27b',
-    name: '🧪 Qwen 3.6 27B (Experimental - Disabled)',
-    provider: 'Groq',
-    speed: 'Good',
-    disabled: true
-  },
-  {
     id: 'meta-llama/llama-4-scout-17b-16e-instruct',
     name: '👁️ Llama 4 Scout (Agentic)',
     provider: 'Groq',
     speed: 'Very Fast'
   },
 
-  // ================= NVIDIA (NEW) =================
+  // ================= HUGGING FACE =================
   {
-    id: 'qwen/qwen3-32b',
-    name: '🐉 Qwen3 32B (NVIDIA)',
-    provider: 'NVIDIA',
-    speed: 'Fast'
-  },
-  {
-    id: 'qwen/qwen3-coder-480b-a35b-instruct',
-    name: '💻 Qwen3 Coder 480B (Best Coding)',
-    provider: 'NVIDIA',
-    speed: 'Medium'
-  },
-  {
-    id: 'z-ai/glm-5.1',
-    name: '🧠 GLM 5.1 (Advanced Reasoning)',
-    provider: 'NVIDIA',
+    id: 'deepseek-ai/DeepSeek-V4-Pro:novita',
+    name: '🧠 DeepSeek V4 Pro (Reasoning)',
+    provider: 'HuggingFace',
     speed: 'Medium'
   },
 

@@ -14,6 +14,7 @@ export async function runMultiAgentPipeline({
   userName = 'Daniyal', // 🚀 Accepted with a clean default fallback
 }) {
   const selectedModel = (model && AVAILABLE_MODELS[model]) ? model : DEFAULT_MODEL;
+  const cleanMessage = message.toLowerCase().trim();
   const pipeline = [];
 
   // ── Step 1: Router Agent ──────────────────────────────────────
@@ -21,6 +22,25 @@ export async function runMultiAgentPipeline({
   pipeline.push({ step: 1, agent: AGENT_IDS.ROUTER, status: 'completed' });
 
   const route = await routeToAgent(message, history, forcedAgent);
+
+  // ── 🛡️ Identity Query Guardrail ──────────────────────────────
+  // Intercepts personal/identity questions early to avoid context pollution from web search (RAG)
+  const identityTriggers = [
+    'what is my name', 
+    'what s my nmae', 
+    'whats my name', 
+    'who am i', 
+    'tell me my name', 
+    'my name'
+  ];
+  
+  const isIdentityQuery = identityTriggers.some(trigger => cleanMessage.includes(trigger)) || 
+                          /\b(who\s*am\s*i|what\s*is\s*my\s*name)\b/i.test(cleanMessage);
+
+  if (isIdentityQuery) {
+    route.needsSearch = false;
+    route.primaryAgent = AGENT_IDS.GENERAL;
+  }
 
   // ── 💻 Computer Agent Interception ──────────────────────
   const computerTriggers = [
@@ -35,7 +55,6 @@ export async function runMultiAgentPipeline({
     'tasklist', 'active tasks', 'running apps', 'processes'
   ];
 
-  const cleanMessage = message.toLowerCase().trim();
   const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER || 
                             computerTriggers.some(word => cleanMessage.includes(word));
   
@@ -70,7 +89,7 @@ export async function runMultiAgentPipeline({
   // ── 🟩 Image Generation Interception ──────────────────────────
   const imageTriggerWords = ['generate an image', 'generate image', 'make an image', 'draw an image', 'create an image'];
   const isImageRequest = route.primaryAgent === AGENT_IDS.IMAGE || 
-                         imageTriggerWords.some(word => message.toLowerCase().includes(word));
+                         imageTriggerWords.some(word => cleanMessage.includes(word));
 
   if (isImageRequest) {
     onStatus?.('Image Agent: generating your visual asset...');
@@ -112,7 +131,6 @@ export async function runMultiAgentPipeline({
     pipeline.push({ step: pipeline.length + 1, agent: AGENT_IDS.RESEARCH, status: 'running' });
 
     if (route.primaryAgent === AGENT_IDS.RESEARCH) {
-      // Forward userName here if the research agent acts as the main thread responder
       const result = await runSpecialistAgent(AGENT_IDS.RESEARCH, { 
         message, history, model: selectedModel, researchContext: '', userName 
       });
@@ -133,7 +151,7 @@ export async function runMultiAgentPipeline({
   pipeline.push({ step: pipeline.length + 1, agent: route.primaryAgent, status: 'running' });
 
   const result = await runSpecialistAgent(route.primaryAgent, {
-    message, history, model: selectedModel, researchContext, userName, // 🚀 Passed to factory matrix
+    message, history, model: selectedModel, researchContext, userName,
   });
 
   pipeline[pipeline.length - 1].status = 'completed';

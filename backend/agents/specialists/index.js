@@ -8,22 +8,37 @@ import { executeComputerTask } from '../../hyper/aiAssistant.js';
  */
 function buildMessages(agentId, { message, history, researchContext, userName = 'Daniyal' }) {
   const agent = AGENTS[agentId] || AGENTS[AGENT_IDS.GENERAL];
-  const contextBlock = researchContext
-    ? `\n\n[WEB RESEARCH CONTEXT]\n${researchContext}\n[/WEB RESEARCH CONTEXT]`
-    : '';
-
-  return [
+  
+  const promptList = [
     {
       role: 'system',
-      content: `${agent.systemPrompt || 'You are a helpful AI assistant.'}${contextBlock}
-
-CRITICAL USER CONTEXT: You are communicating directly with your user, ${userName}. Address them by name when natural, professional, and contextually appropriate.
+      content: `${agent.systemPrompt || 'You are a helpful AI assistant.'}
+      
 You are part of a multi-agent team. Do not expose internal technical agent names or pipeline mechanics to the user.
 Deliver a clean, high-quality response directly.`,
-    },
-    ...history,
-    { role: 'user', content: message },
+    }
   ];
+
+  // If web research context exists, inject it as its own isolated block
+  if (researchContext) {
+    promptList.push({
+      role: 'system',
+      content: `[WEB RESEARCH CONTEXT]\n${researchContext}\n[/WEB RESEARCH CONTEXT]`
+    });
+  }
+
+  // 🚀 CRITICAL FIX: Place your identity context AFTER the search dump 
+  // This prevents the model from experiencing "attention decay" over long tokens.
+  promptList.push({
+    role: 'system',
+    content: `CRITICAL USER IDENTITY: You are talking directly to ${userName}. If the user asks for their name, who they are, or details about themselves, answer them using this exact name value.`
+  });
+
+  // Inject conversation history and the new message intent
+  promptList.push(...history);
+  promptList.push({ role: 'user', content: message });
+
+  return promptList;
 }
 
 /**

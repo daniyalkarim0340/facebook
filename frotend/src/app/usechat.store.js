@@ -49,19 +49,26 @@ availableModels: [
     speed: 'Medium'
   },
 
-  // ================= OPENROUTER =================
+  // ================= OPENROUTER FREE =================
   {
-    id: 'deepseek/deepseek-chat',
-    name: '🚀 DeepSeek Chat (OpenRouter)',
+    id: 'deepseek/deepseek-r1:free',
+    name: '🧠 DeepSeek R1 Free',
+    provider: 'openrouter',
+    speed: 'Medium'
+  },
+
+  {
+    id: 'qwen/qwen3-coder:free',
+    name: '💻 Qwen 3 Coder Free',
     provider: 'openrouter',
     speed: 'Fast'
   },
 
   {
-    id: 'deepseek/deepseek-r1',
-    name: '🧠 DeepSeek R1 (OpenRouter)',
+    id: 'google/gemma-3-27b-it:free',
+    name: '💎 Gemma 3 27B Free',
     provider: 'openrouter',
-    speed: 'Medium'
+    speed: 'Fast'
   },
 
   // ================= OLLAMA =================

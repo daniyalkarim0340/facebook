@@ -51,25 +51,12 @@ availableModels: [
 
   // ================= OPENROUTER FREE =================
   {
-    id: 'deepseek/deepseek-r1:free',
-    name: '🧠 DeepSeek R1 Free',
-    provider: 'openrouter',
-    speed: 'Medium'
-  },
+  id: 'cohere/north-mini-code:free',
+  name: '💻 North Mini Code Free',
+  provider: 'openrouter',
+  speed: 'Fast'
+},
 
-  {
-    id: 'qwen/qwen3-coder:free',
-    name: '💻 Qwen 3 Coder Free',
-    provider: 'openrouter',
-    speed: 'Fast'
-  },
-
-  {
-    id: 'google/gemma-3-27b-it:free',
-    name: '💎 Gemma 3 27B Free',
-    provider: 'openrouter',
-    speed: 'Fast'
-  },
 
   // ================= OLLAMA =================
   {

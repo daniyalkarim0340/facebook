@@ -22,20 +22,9 @@ export const AVAILABLE_MODELS = {
   // ================= OPENROUTER =================
  
   // ================= OPENROUTER FREE =================
-'deepseek/deepseek-r1:free': {
-  name: 'DeepSeek R1 Free (OpenRouter)',
-  maxTokens: 4096,
-  provider: 'openrouter'
-},
-
-'qwen/qwen3-coder:free': {
-  name: 'Qwen 3 Coder Free (OpenRouter)',
-  maxTokens: 4096,
-  provider: 'openrouter'
-},
-
-'google/gemma-3-27b-it:free': {
-  name: 'Gemma 3 27B Free (OpenRouter)',
+// ================= OPENROUTER FREE =================
+'cohere/north-mini-code:free': {
+  name: 'North Mini Code Free',
   maxTokens: 4096,
   provider: 'openrouter'
 },

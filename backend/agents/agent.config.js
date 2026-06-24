@@ -1,5 +1,5 @@
 export const AVAILABLE_MODELS = {
-  // ================= GROQ (ONLY REAL MODELS) =================
+  // ================= GROQ =================
   'llama-3.3-70b-versatile': {
     name: 'Llama 3.3 70B (Powerful Reasoning)',
     maxTokens: 4096,
@@ -12,24 +12,33 @@ export const AVAILABLE_MODELS = {
     provider: 'groq'
   },
 
-  'mixtral-8x7b-32768': {
-    name: 'Mixtral 8x7B (Fast Reasoning)',
-    maxTokens: 4096,
-    provider: 'groq'
-  },
-
-  'llama3-70b-8192': {
-    name: 'Llama 3 70B (Stable)',
-    maxTokens: 4096,
-    provider: 'groq'
-  },
-
   // ================= HUGGING FACE =================
   'deepseek-ai/DeepSeek-V4-Pro:novita': {
     name: 'DeepSeek V4 Pro (HF Router)',
     maxTokens: 4096,
     provider: 'huggingface'
   },
+
+  // ================= OPENROUTER =================
+ 
+  // ================= OPENROUTER FREE =================
+'deepseek/deepseek-r1:free': {
+  name: 'DeepSeek R1 Free (OpenRouter)',
+  maxTokens: 4096,
+  provider: 'openrouter'
+},
+
+'qwen/qwen3-coder:free': {
+  name: 'Qwen 3 Coder Free (OpenRouter)',
+  maxTokens: 4096,
+  provider: 'openrouter'
+},
+
+'google/gemma-3-27b-it:free': {
+  name: 'Gemma 3 27B Free (OpenRouter)',
+  maxTokens: 4096,
+  provider: 'openrouter'
+},
 
   // ================= OLLAMA =================
   'gemma2:2b': {
@@ -47,6 +56,7 @@ export const AVAILABLE_MODELS = {
 
 export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 export const ROUTER_MODEL = 'llama-3.1-8b-instant';
+
 export const AGENT_IDS = {
   ROUTER: 'router',
   RESEARCH: 'research',

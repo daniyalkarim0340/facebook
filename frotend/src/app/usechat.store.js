@@ -25,15 +25,15 @@ const useChatStore = create(
       selectedModel: 'llama-3.3-70b-versatile',
       selectedAgent: null,
       availableAgents: [],
-
- availableModels: [
-  // ================= GROQ (ONLY REAL MODELS) =================
+availableModels: [
+  // ================= GROQ =================
   {
     id: 'llama-3.3-70b-versatile',
     name: '🦙 Llama 3.3 70B (Powerful)',
     provider: 'groq',
     speed: 'Fast'
   },
+
   {
     id: 'llama-3.1-8b-instant',
     name: '⚡ Llama 3.1 8B (Fast)',
@@ -44,21 +44,37 @@ const useChatStore = create(
   // ================= HUGGING FACE =================
   {
     id: 'deepseek-ai/DeepSeek-V4-Pro:novita',
-    name: '🧠 DeepSeek V4 Pro (Reasoning)',
+    name: '🧠 DeepSeek V4 Pro',
     provider: 'huggingface',
+    speed: 'Medium'
+  },
+
+  // ================= OPENROUTER =================
+  {
+    id: 'deepseek/deepseek-chat',
+    name: '🚀 DeepSeek Chat (OpenRouter)',
+    provider: 'openrouter',
+    speed: 'Fast'
+  },
+
+  {
+    id: 'deepseek/deepseek-r1',
+    name: '🧠 DeepSeek R1 (OpenRouter)',
+    provider: 'openrouter',
     speed: 'Medium'
   },
 
   // ================= OLLAMA =================
   {
     id: 'gemma2:2b',
-    name: '💻 Gemma 2 2B (Local Ollama)',
+    name: '💻 Gemma 2 2B (Local)',
     provider: 'ollama',
     speed: 'Fast'
   },
+
   {
     id: 'gemma3:4b',
-    name: '⚡ Gemma 3 4B (Local Ollama)',
+    name: '⚡ Gemma 3 4B (Local)',
     provider: 'ollama',
     speed: 'Fast'
   }

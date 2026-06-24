@@ -1,20 +1,17 @@
 import { routeToAgent } from './router.agent.js';
-import { runResearchAgent, runSpecialistAgent } from './specialists/index.js';
+import { runSpecialistAgent } from './specialists/index.js';
 import { optimizeSearchQuery, runWebSearch } from './tools/webSearch.tool.js';
 import { AGENTS, AGENT_IDS, AVAILABLE_MODELS, DEFAULT_MODEL } from './agent.config.js';
 import { executeImageGeneration } from '../controllar/image.controllar.js';
 import { executeComputerTask } from '../hyper/aiAssistant.js';
- // 👈 Import new controller
 
-/**
- * Multi-Agent Pipeline
- */
 export async function runMultiAgentPipeline({
   message,
   history = [],
   model,
   forcedAgent = null,
   onStatus = null,
+  userName = 'Daniyal', // 🚀 Accepted with a clean default fallback
 }) {
   const selectedModel = (model && AVAILABLE_MODELS[model]) ? model : DEFAULT_MODEL;
   const pipeline = [];
@@ -25,31 +22,23 @@ export async function runMultiAgentPipeline({
 
   const route = await routeToAgent(message, history, forcedAgent);
 
-  // ── 💻 NEW: Computer Agent Interception ──────────────────────
-  // Trigger words to ensure OS commands bypass normal chat
- const computerTriggers = [
-  // ── APP MANIPULATION ──
-  'open', 'start', 'launch', 'run', 'execute', 'boot', 'bring up',
-  'close', 'kill', 'stop', 'terminate', 'end task', 'force quit', 'exit', 'quit',
+  // ── 💻 Computer Agent Interception ──────────────────────
+  const computerTriggers = [
+    'open', 'start', 'launch', 'run', 'execute', 'boot', 'bring up',
+    'close', 'kill', 'stop', 'terminate', 'end task', 'force quit', 'exit', 'quit',
+    'go to', 'open website', 'browse', 'navigate to', 'visit', 'search for', 'look up', 'google',
+    'make', 'create', 'build', 'spawn', 'new folder', 'new file', 'generate file', 'generate folder',
+    'write', 'save', 'update', 'append', 'edit', 'modify', 'change content',
+    'delete', 'remove', 'trash', 'wipe', 'clear', 'erase', 'destroy',
+    'read', 'view', 'show', 'display', 'list', 'show files', 'look inside', 'check folder', 'directory', 'dir',
+    'restart', 'reboot', 'shutdown', 'turn off', 'power off', 'lock', 'sleep', 'hibernate', 'log out', 'sign out',
+    'tasklist', 'active tasks', 'running apps', 'processes'
+  ];
 
-  // ── WEB & INTERNET ──
-  'go to', 'open website', 'browse', 'navigate to', 'visit', 'search for', 'look up', 'google',
-
-  // ── FILE & FOLDER OPERATIONS ──
-  'make', 'create', 'build', 'spawn', 'new folder', 'new file', 'generate file', 'generate folder',
-  'write', 'save', 'update', 'append', 'edit', 'modify', 'change content',
-  'delete', 'remove', 'trash', 'wipe', 'clear', 'erase', 'destroy',
-  'read', 'view', 'show', 'display', 'list', 'show files', 'look inside', 'check folder', 'directory', 'dir',
-
-  // ── OS PROCESS & POWER CONTROLS ──
-  'restart', 'reboot', 'shutdown', 'turn off', 'power off', 'lock', 'sleep', 'hibernate', 'log out', 'sign out',
-  'tasklist', 'active tasks', 'running apps', 'processes'
-];
-
-const cleanMessage = message.toLowerCase().trim();
-
-const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER || 
-                          computerTriggers.some(word => cleanMessage.includes(word));
+  const cleanMessage = message.toLowerCase().trim();
+  const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER || 
+                            computerTriggers.some(word => cleanMessage.includes(word));
+  
   if (isComputerRequest) {
     onStatus?.('Computer Agent: Executing system action...');
     pipeline.push({ step: 2, agent: AGENT_IDS.COMPUTER, status: 'running' });
@@ -59,10 +48,10 @@ const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER ||
       pipeline[pipeline.length - 1].status = 'completed';
 
       return {
-        response: computerResult.responseMessage,
+        response: computerResult.responseMessage || computerResult.message,
         primaryAgent: AGENT_IDS.COMPUTER,
         agentsPipeline: pipeline.map((p) => p.agent),
-        toolExecuted: computerResult.success ? `NOVA OS Tool: ${computerResult.input.action}` : 'None',
+        toolExecuted: computerResult.success ? `NOVA OS Tool: ${computerResult.input?.action || 'System'}` : 'None',
         isComputerAction: true,
         agentMeta: {
           route,
@@ -74,7 +63,7 @@ const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER ||
     } catch (error) {
       console.error("Computer Pipeline interception failed:", error);
       pipeline[pipeline.length - 1].status = 'failed';
-      // If it fails, let it fall through to a normal specialist agent response
+      route.primaryAgent = AGENT_IDS.GENERAL; 
     }
   }
 
@@ -92,7 +81,7 @@ const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER ||
       imageTriggerWords.forEach(word => {
         cleanPrompt = cleanPrompt.replace(new RegExp(word, 'gi'), '');
       });
-      cleanPrompt = cleanPrompt.replace(/for/i, '').trim();
+      cleanPrompt = cleanPrompt.replace(/^(?:of|for|about)\s+/i, '').trim();
 
       const imageUrl = await executeImageGeneration(cleanPrompt || message);
       pipeline[pipeline.length - 1].status = 'completed';
@@ -108,6 +97,7 @@ const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER ||
     } catch (error) {
       console.error("Image Pipeline interception failed:", error);
       pipeline[pipeline.length - 1].status = 'failed';
+      route.primaryAgent = AGENT_IDS.GENERAL;
     }
   }
 
@@ -122,16 +112,12 @@ const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER ||
     pipeline.push({ step: pipeline.length + 1, agent: AGENT_IDS.RESEARCH, status: 'running' });
 
     if (route.primaryAgent === AGENT_IDS.RESEARCH) {
-      const result = await runResearchAgent({ message, history, model: selectedModel });
+      // Forward userName here if the research agent acts as the main thread responder
+      const result = await runSpecialistAgent(AGENT_IDS.RESEARCH, { 
+        message, history, model: selectedModel, researchContext: '', userName 
+      });
       pipeline[pipeline.length - 1].status = 'completed';
-
-      return {
-        response: result.response,
-        primaryAgent: AGENT_IDS.RESEARCH,
-        agentsPipeline: pipeline.map((p) => p.agent),
-        toolExecuted: `Multi-Agent: ${AGENTS[AGENT_IDS.RESEARCH].name} + Web Search`,
-        agentMeta: { route, searchQuery: result.searchQuery, sourceCount: result.sourceCount, model: selectedModel },
-      };
+      return result;
     }
 
     searchQuery = await optimizeSearchQuery(message, history);
@@ -141,26 +127,16 @@ const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER ||
     pipeline[pipeline.length - 1].status = 'completed';
   }
 
-  // ── Step 3: Specialist Agent ──────────────────────────────────
+  // ── Step 3: Specialist Agent Execution ─────────────────────────
   const specialist = AGENTS[route.primaryAgent] || AGENTS[AGENT_IDS.GENERAL];
   onStatus?.(`${specialist.name}: generating response...`);
   pipeline.push({ step: pipeline.length + 1, agent: route.primaryAgent, status: 'running' });
 
   const result = await runSpecialistAgent(route.primaryAgent, {
-    message, history, model: selectedModel, researchContext,
+    message, history, model: selectedModel, researchContext, userName, // 🚀 Passed to factory matrix
   });
 
   pipeline[pipeline.length - 1].status = 'completed';
 
-  const toolLabel = researchContext
-    ? `Multi-Agent: ${specialist.name} + Research`
-    : `Multi-Agent: ${specialist.name}`;
-
-  return {
-    response: result.response,
-    primaryAgent: route.primaryAgent,
-    agentsPipeline: pipeline.map((p) => p.agent),
-    toolExecuted: toolLabel,
-    agentMeta: { route, searchQuery, sourceCount, model: selectedModel, secondaryAgents: route.secondaryAgents },
-  };
+  return result;
 }

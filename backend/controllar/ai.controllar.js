@@ -4,17 +4,18 @@ import CustomError from '../handler/customerror.js';
 import { runMultiAgentPipeline } from '../agents/agent.orchestrator.js';
 import { getAgentList, AVAILABLE_MODELS, AGENTS, AGENT_IDS } from '../agents/agent.config.js';
 
-// ----------------------------------------------------
-// MULTI-AGENT CHAT HANDLER
-// ----------------------------------------------------
 export const handleAgentChat = asyncHandler(async (req, res, next) => {
   const { message, sessionId, model, agent } = req.body;
   const userId = req.user._id;
+  
+  // Extract your identity name from the request context with a clean fallback
+  const userName = req.user.name || 'Daniyal'; 
 
   if (!message?.trim()) {
     return next(new CustomError('A message content prompt is required.', 400));
   }
 
+  // 1. Fetch or initialize the session
   let session;
   if (sessionId) {
     session = await ChatSession.findOne({ _id: sessionId, userId });
@@ -25,37 +26,57 @@ export const handleAgentChat = asyncHandler(async (req, res, next) => {
     session = await ChatSession.create({ userId, messages: [] });
   }
 
+  // 2. Compile sliding window memory context BEFORE committing the new turn
   const history = session.messages.slice(-24).map((msg) => ({
     role: msg.role,
     content: msg.content,
   }));
 
-  const result = await runMultiAgentPipeline({
-    message: message.trim(),
-    history,
-    model,
-    forcedAgent: agent || null,
-  });
+  // Early-commit the user message intent immediately to guarantee data persistence
+  session.messages.push({ role: 'user', content: message.trim() });
+  
+  if (session.messages.length === 1) {
+    session.title = message.trim().length > 40 ? `${message.trim().substring(0, 40)}...` : message.trim();
+  }
+  await session.save();
+
+  // 3. Execute the heavy AI Multi-Agent pipeline
+  let result;
+  try {
+    result = await runMultiAgentPipeline({
+      message: message.trim(),
+      history,
+      model,
+      forcedAgent: agent || null,
+      userName, // 🚀 Passed down into the orchestrator core
+    });
+  } catch (pipelineError) {
+    session.messages.push({
+      role: 'system',
+      content: 'The agent pipeline encountered an execution error processing this turn.',
+      agentUsed: 'SystemGuardrail',
+    });
+    await session.save();
+    return next(new CustomError(`Agent Pipeline Error: ${pipelineError.message}`, 502));
+  }
 
   const agentInfo = AGENTS[result.primaryAgent];
   const modelName = AVAILABLE_MODELS[result.agentMeta?.model]?.name || model;
 
- session.messages.push({ role: 'user', content: message.trim() });
+  // 4. Push the structural assistant response payload right into MongoDB
   session.messages.push({
     role: 'assistant',
     content: result.response,
-    isImage: result.isImage || false, // 🟩 ADD THIS LINE so MongoDB tracks it as an image asset
-    toolUsed: result.toolExecuted,
+    isImage: result.isImage || false, 
+    toolUsed: result.toolExecuted || 'None',
     agentUsed: result.primaryAgent,
-    agentsPipeline: result.agentsPipeline,
+    agentsPipeline: result.agentsPipeline || [],
     model: result.agentMeta?.model,
   });
 
-  if (session.messages.length <= 2) {
-    session.title = message.length > 30 ? `${message.substring(0, 30)}...` : message;
-  }
   await session.save();
 
+  // 5. Return high-density tracing metadata directly to your frontend UI
   res.status(200).json({
     status: 'success',
     sessionId: session._id,

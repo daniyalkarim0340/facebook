@@ -39,9 +39,11 @@ export async function completeChat({
       AVAILABLE_MODELS[model] || AVAILABLE_MODELS[DEFAULT_MODEL];
 
     const tokenLimit =
-      maxTokens ?? modelConfig?.maxTokens ?? 2048;
+      maxTokens ?? modelConfig?.maxTokens ?? 1024;
 
-    // ================= OLLAMA =================
+    // =====================================================
+    // OLLAMA (LOCAL MODELS)
+    // =====================================================
     if (modelConfig?.provider === 'ollama') {
       const result = await ollama.chat({
         model,
@@ -56,8 +58,14 @@ export async function completeChat({
       return result.message.content;
     }
 
-    // ================= HUGGING FACE =================
-    if (modelConfig?.provider === 'huggingface') {
+    // =====================================================
+    // HUGGING FACE MODELS
+    // =====================================================
+    const hfModels = [
+      'deepseek-ai/DeepSeek-V4-Pro:novita',
+    ];
+
+    if (hfModels.includes(model)) {
       const completion = await hf.chat.completions.create({
         model,
         messages,
@@ -72,8 +80,18 @@ export async function completeChat({
       return completion.choices[0].message.content;
     }
 
-    // ================= OPENROUTER =================
-    if (modelConfig?.provider === 'openrouter') {
+    // =====================================================
+    // OPENROUTER MODELS (NEW)
+    // =====================================================
+    const openrouterModels = [
+      'deepseek/deepseek-chat',
+      'openai/gpt-oss-20b',
+      'meta-llama/llama-3-8b',
+      'mistralai/mixtral',
+      'qwen/qwen2.5'
+    ];
+
+    if (openrouterModels.includes(model)) {
       const completion = await openrouter.chat.completions.create({
         model,
         messages,
@@ -88,7 +106,9 @@ export async function completeChat({
       return completion.choices[0].message.content;
     }
 
-    // ================= GROQ =================
+    // =====================================================
+    // GROQ MODELS (DEFAULT CLOUD)
+    // =====================================================
     const completion = await groq.chat.completions.create({
       model,
       messages,
@@ -103,13 +123,12 @@ export async function completeChat({
     });
 
     return completion.choices[0].message.content;
-
   } catch (error) {
     console.error('Model Error:', error);
 
     return JSON.stringify({
       success: false,
-      error: error?.message || 'Unknown error',
+      error: error.message,
       model,
     });
   }

@@ -3,12 +3,11 @@ import { AGENTS, AGENT_IDS } from '../agent.config.js';
 import { optimizeSearchQuery, runWebSearch } from '../tools/webSearch.tool.js';
 import { executeComputerTask } from '../../hyper/aiAssistant.js';
 
-// 🟩 FIXED: Import your computer task controller execution logic
-// (Adjust this relative path if your files are structured differently)
-
-
-function buildMessages(agentId, { message, history, researchContext }) {
-  const agent = AGENTS[agentId];
+/**
+ * Builds a structured, identity-infused message array for deep context reasoning
+ */
+function buildMessages(agentId, { message, history, researchContext, userName = 'Daniyal' }) {
+  const agent = AGENTS[agentId] || AGENTS[AGENT_IDS.GENERAL];
   const contextBlock = researchContext
     ? `\n\n[WEB RESEARCH CONTEXT]\n${researchContext}\n[/WEB RESEARCH CONTEXT]`
     : '';
@@ -16,72 +15,92 @@ function buildMessages(agentId, { message, history, researchContext }) {
   return [
     {
       role: 'system',
-      content: `${agent.systemPrompt}${contextBlock}
+      content: `${agent.systemPrompt || 'You are a helpful AI assistant.'}${contextBlock}
 
-You are part of a multi-agent team. Do not mention other agents or internal routing.
-Deliver a complete, high-quality answer directly to the user.`,
+CRITICAL USER CONTEXT: You are communicating directly with your user, ${userName}. Address them by name when natural, professional, and contextually appropriate.
+You are part of a multi-agent team. Do not expose internal technical agent names or pipeline mechanics to the user.
+Deliver a clean, high-quality response directly.`,
     },
     ...history,
     { role: 'user', content: message },
   ];
 }
 
-export async function runResearchAgent({ message, history, model }) {
+/**
+ * Research Synthesis Pipeline
+ */
+export async function runResearchAgent({ message, history, model, userName }) {
   const query = await optimizeSearchQuery(message, history);
   const search = await runWebSearch(query);
 
   const synthesis = await completeChat({
     model,
-    temperature: 0.6,
+    temperature: 0.3,
     messages: buildMessages(AGENT_IDS.RESEARCH, {
       message,
       history,
       researchContext: search.context,
+      userName,
     }),
   });
 
   return {
     response: synthesis,
-    agentId: AGENT_IDS.RESEARCH,
-    searchQuery: query,
-    sourceCount: search.sourceCount,
-    researchContext: search.context,
+    primaryAgent: AGENT_IDS.RESEARCH,
+    agentsPipeline: [AGENT_IDS.ROUTER, AGENT_IDS.RESEARCH],
+    toolExecuted: `Multi-Agent: Research Agent + Web Search`,
+    agentMeta: { searchQuery: query, sourceCount: search.sourceCount, model },
   };
 }
 
+/**
+ * Computer Agent OS Pipeline Fallback Engine
+ */
 export async function runComputerAgent({ message, history, model }) {
-  // 🟩 FIXED: Pass parameters individually without the wrapping object curly braces
   const computerResult = await executeComputerTask(message, history, model);
+  const finalResponse = computerResult.responseMessage || computerResult.message || 'System command completed successfully.';
 
   return {
-    response: computerResult.message, 
-    agentId: AGENT_IDS.COMPUTER,
-    isComputerAction: true,           
-    toolExecuted: computerResult.tool, 
-    executionResult: computerResult.execution_result 
+    response: finalResponse, 
+    primaryAgent: AGENT_IDS.COMPUTER,
+    agentsPipeline: [AGENT_IDS.ROUTER, AGENT_IDS.COMPUTER],
+    toolExecuted: computerResult.success ? `NOVA OS Tool: ${computerResult.input?.action || 'System'}` : 'None', 
+    agentMeta: { executionResult: computerResult.execution_result || null, model }
   };
 }
-export async function runSpecialistAgent(agentId, { message, history, model, researchContext }) {
-  // Branch 1: Research Agent Web Pipeline
+
+/**
+ * Master Specialist Matrix Factory
+ */
+export async function runSpecialistAgent(agentId, { message, history, model, researchContext, userName }) {
   if (agentId === AGENT_IDS.RESEARCH) {
-    return runResearchAgent({ message, history, model });
+    return runResearchAgent({ message, history, model, userName });
   }
 
-  // 🟩 Branch 2: FIXED - Computer Agent Operating System Pipeline
   if (agentId === AGENT_IDS.COMPUTER) {
     return runComputerAgent({ message, history, model });
   }
 
-  // Branch 3: Standard Chat Specialists (Code, Writer, Analyst, General)
+  const specialist = AGENTS[agentId] || AGENTS[AGENT_IDS.GENERAL];
+  const targetTemperature = agentId === AGENT_IDS.CODE ? 0.1 : 0.7;
+
   const response = await completeChat({
     model,
-    temperature: 0.7,
-    messages: buildMessages(agentId, { message, history, researchContext }),
+    temperature: targetTemperature,
+    messages: buildMessages(agentId, { message, history, researchContext, userName }),
   });
+
+  const toolLabel = researchContext
+    ? `Multi-Agent: ${specialist.name} + Research`
+    : `Multi-Agent: ${specialist.name}`;
+    // Inside specialists/index.js -> runSpecialistAgent
+console.log("🚀 PAYLOAD BEING SENT TO LLM:", JSON.stringify(buildMessages(agentId, { message, history, researchContext, userName }), null, 2));
 
   return {
     response,
-    agentId,
-    researchContext: researchContext || null,
+    primaryAgent: agentId,
+    agentsPipeline: researchContext ? [AGENT_IDS.ROUTER, AGENT_IDS.RESEARCH, agentId] : [AGENT_IDS.ROUTER, agentId],
+    toolExecuted: toolLabel,
+    agentMeta: { researchContext: researchContext || null, model },
   };
 }

@@ -5,7 +5,7 @@ import {
   ROUTER_MODEL,
 } from './agent.config.js';
 
-// 🟩 FIXED: Added AGENT_IDS.COMPUTER to the valid array layer
+// Valid array layer for sanitizing routed agent allocations
 const VALID_AGENTS = [
   AGENT_IDS.RESEARCH,
   AGENT_IDS.CODE,
@@ -13,49 +13,60 @@ const VALID_AGENTS = [
   AGENT_IDS.ANALYST,
   AGENT_IDS.GENERAL,
   AGENT_IDS.IMAGE,
-  AGENT_IDS.COMPUTER, // 👈 Added
+  AGENT_IDS.COMPUTER,
 ];
 
 function regexRoute(message) {
   const lower = message.toLowerCase();
 
-  // ── 💻 NEW: System & Computer Automation Patterns Check ─────────────────
-  // Placed high up so actionable OS triggers intercept smoothly
+  // ── 💻 System & Computer Automation Patterns Check ─────────────────
   const computerPatterns = /\b(open|launch|run|close|kill|terminate|make|create|build|delete|remove|folder|file|directory|restart|reboot|shutdown|lock|power off)\b/i;
   if (computerPatterns.test(lower)) {
     return { 
       primaryAgent: AGENT_IDS.COMPUTER, 
       needsSearch: false, 
       confidence: 0.85, 
-      reasoning: 'System command or folder/file automation keyword detected' 
+      reasoning: 'System command or folder/file automation keyword detected (Regex Fallback)' 
+    };
+  }
+
+  // ── 🟩 Image Asset Prompt Trigger Check ─────────────────────────────
+  // Added to ensure the image pipeline functions even if the LLM fails
+  const imagePatterns = /\b(generate image|create image|make image|draw image|generate an image|illustration|logo|avatar)\b/i;
+  if (imagePatterns.test(lower)) {
+    return {
+      primaryAgent: AGENT_IDS.IMAGE,
+      needsSearch: false,
+      confidence: 0.85,
+      reasoning: 'Visual asset generation or design keyword detected (Regex Fallback)'
     };
   }
 
   if (EXPLICIT_SEARCH_TRIGGERS.some((t) => lower.includes(t))) {
-    return { primaryAgent: AGENT_IDS.RESEARCH, needsSearch: true, confidence: 0.9, reasoning: 'Explicit search request' };
+    return { primaryAgent: AGENT_IDS.RESEARCH, needsSearch: true, confidence: 0.9, reasoning: 'Explicit search request (Regex Fallback)' };
   }
 
   const codePatterns = /\b(code|debug|function|api|react|node|javascript|python|bug|error|typescript|database|sql|mongodb|implement|refactor)\b/i;
   if (codePatterns.test(lower)) {
-    return { primaryAgent: AGENT_IDS.CODE, needsSearch: false, confidence: 0.75, reasoning: 'Programming keywords detected' };
+    return { primaryAgent: AGENT_IDS.CODE, needsSearch: false, confidence: 0.75, reasoning: 'Programming keywords detected (Regex Fallback)' };
   }
 
   const writerPatterns = /\b(write|email|essay|blog|article|letter|story|poem|copy|draft|rewrite)\b/i;
   if (writerPatterns.test(lower)) {
-    return { primaryAgent: AGENT_IDS.WRITER, needsSearch: false, confidence: 0.75, reasoning: 'Writing task detected' };
+    return { primaryAgent: AGENT_IDS.WRITER, needsSearch: false, confidence: 0.75, reasoning: 'Writing task detected (Regex Fallback)' };
   }
 
   const analystPatterns = /\b(analyze|compare|pros and cons|evaluate|strategy|breakdown|assess|recommend|decision)\b/i;
   if (analystPatterns.test(lower)) {
-    return { primaryAgent: AGENT_IDS.ANALYST, needsSearch: false, confidence: 0.75, reasoning: 'Analysis task detected' };
+    return { primaryAgent: AGENT_IDS.ANALYST, needsSearch: false, confidence: 0.75, reasoning: 'Analysis task detected (Regex Fallback)' };
   }
 
   const newsPatterns = /\b(latest|today|current|news|2026|recent|trending|price of|stock)\b/i;
   if (newsPatterns.test(lower)) {
-    return { primaryAgent: AGENT_IDS.RESEARCH, needsSearch: true, confidence: 0.7, reasoning: 'Time-sensitive query detected' };
+    return { primaryAgent: AGENT_IDS.RESEARCH, needsSearch: true, confidence: 0.7, reasoning: 'Time-sensitive query detected (Regex Fallback)' };
   }
 
-  return { primaryAgent: AGENT_IDS.GENERAL, needsSearch: false, confidence: 0.5, reasoning: 'Default general routing' };
+  return { primaryAgent: AGENT_IDS.GENERAL, needsSearch: false, confidence: 0.5, reasoning: 'Default general routing (Regex Fallback)' };
 }
 
 export async function routeToAgent(message, history = [], forcedAgent = null) {
@@ -72,7 +83,6 @@ export async function routeToAgent(message, history = [], forcedAgent = null) {
   }
 
   try {
-    // 🟩 FIXED: Added explicit computer task definition instructions to the prompt block
     const routePrompt = `You are a routing agent analyzing a user message.
 User Message: "${message}"
 
@@ -106,7 +116,13 @@ Reply with ONLY valid JSON:
       ],
     });
 
-    const parsed = JSON.parse(raw.trim());
+    // Clean out accidental markdown backticks (\`\`\`json ... \`\`\`) to isolate the raw JSON text
+    const cleanJsonString = raw
+      .replace(/^```json/i, '')
+      .replace(/```$/, '')
+      .trim();
+
+    const parsed = JSON.parse(cleanJsonString);
     const primaryAgent = VALID_AGENTS.includes(parsed.primaryAgent)
       ? parsed.primaryAgent
       : AGENT_IDS.GENERAL;
@@ -119,7 +135,7 @@ Reply with ONLY valid JSON:
       reasoning: parsed.reasoning || 'LLM router decision',
     };
   } catch (err) {
-    console.warn('Router LLM fallback:', err.message);
+    console.warn('Router LLM fallback triggered:', err.message);
     return regexRoute(message);
   }
 }

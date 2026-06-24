@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@api/nim": "file:.api/apis/nim",
+    "@google/genai": "^2.10.0",
     "@huggingface/inference": "^4.13.18",
     "@tavily/core": "^0.7.6",
     "axios": "^1.18.0",

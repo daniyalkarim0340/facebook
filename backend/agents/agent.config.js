@@ -1,11 +1,4 @@
 export const AVAILABLE_MODELS = {
-  // ================= OPENAI =================
-  'gpt-5.4-mini': {
-    name: 'GPT-5.4 Mini (Agentic & Fast)',
-    maxTokens: 4096,
-    provider: 'openai'
-  },
-
   // ================= GROQ =================
   'llama-3.3-70b-versatile': {
     name: 'Llama 3.3 70B (Powerful Reasoning)',
@@ -29,11 +22,12 @@ export const AVAILABLE_MODELS = {
   // ================= OPENROUTER =================
  
   // ================= OPENROUTER FREE =================
-  'cohere/north-mini-code:free': {
-    name: 'North Mini Code Free',
-    maxTokens: 4096,
-    provider: 'openrouter'
-  },
+// ================= OPENROUTER FREE =================
+'cohere/north-mini-code:free': {
+  name: 'North Mini Code Free',
+  maxTokens: 4096,
+  provider: 'openrouter'
+},
 
   // ================= OLLAMA =================
   'gemma2:2b': {

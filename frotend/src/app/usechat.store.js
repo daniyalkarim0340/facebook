@@ -5,8 +5,7 @@ import {
   getUserChatHistory, 
   deleteUserChatSession 
 } from "../api/ai.js"; 
-import api from "../api/axios.instance.js"; // Adjust to your relative path to Axios with withCredentials: true
-
+import api from "../api/axios.instance.js"; 
 const useChatStore = create(
   persist(
     (set, get) => ({

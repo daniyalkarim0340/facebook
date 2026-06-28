@@ -96,26 +96,121 @@ export async function routeToAgent(message, history = [], forcedAgent = null) {
   }
 
   try {
-    const routePrompt = `You are a routing agent analyzing a user message.
-User Message: "${message}"
+  const routePrompt = `
+You are an ultra-precise AI routing engine.
 
-Agents available:
-- research: real-time facts, news, web lookups
-- code: writing programs, complex developer code blocks, backend logic
-- writer: emails, essays, blogs
-- analyst: comparisons, strategy
-- image: generating visual art, images, and pictures
-- computer: operating system controls, creating/deleting folders or files, opening apps, running system actions, restarting/locking/shutting down PC
-- general: everything else
+Your ONLY job is to classify the user message into exactly ONE primary agent with strict accuracy.
 
-Reply with ONLY valid JSON:
+You must NOT answer the question. You must NOT be helpful. You ONLY route.
+
+────────────────────────────────────
+AVAILABLE AGENTS (STRICT DEFINITIONS)
+────────────────────────────────────
+
+1. research
+Use when:
+- real-time or factual lookup needed
+- news, current events, prices, trends
+- anything requiring external knowledge
+
+2. code
+Use when:
+- programming, debugging, APIs
+- frontend/backend development
+- JavaScript, Python, SQL, TypeScript
+- error fixing or system design
+
+3. writer
+Use when:
+- writing content (email, essay, blog, story, script)
+- rewriting or improving text
+- formatting or copywriting tasks
+
+4. analyst
+Use when:
+- comparisons, pros/cons
+- decision-making or evaluation
+- strategy, breakdown, reasoning
+
+5. image
+Use ONLY when:
+- user requests image generation
+- logo, avatar, illustration, drawing, visual design
+
+6. computer
+Use ONLY when:
+- OS-level actions
+- file/folder operations
+- open/close apps
+- system automation commands
+- restart/shutdown/terminal actions
+
+7. general
+Use ONLY if nothing above clearly matches.
+
+────────────────────────────────────
+CRITICAL DECISION RULES
+────────────────────────────────────
+
+- ALWAYS pick the MOST SPECIFIC agent.
+- If multiple agents match → choose the MOST ACTION-ORIENTED one.
+- "code" beats "writer" if programming is involved.
+- "research" beats all when time-sensitive or factual uncertainty exists.
+- "computer" overrides everything ONLY if system operation is explicit.
+- NEVER choose multiple primary agents.
+
+────────────────────────────────────
+NEEDS SEARCH RULE
+────────────────────────────────────
+
+Set needsSearch = true ONLY if:
+- research agent is selected AND
+- query involves time-sensitive or external knowledge
+
+Otherwise false.
+
+────────────────────────────────────
+OUTPUT FORMAT (STRICT JSON ONLY)
+────────────────────────────────────
+
+Return ONLY valid JSON. No markdown. No explanation.
+
 {
-  "primaryAgent": "research|code|writer|analyst|general|image|computer",
+  "primaryAgent": "research|code|writer|analyst|image|computer|general",
   "secondaryAgents": [],
   "needsSearch": false,
-  "confidence": 0.9,
-  "reasoning": "Brief explanation text here"
-}`;
+  "confidence": 0.0-1.0,
+  "reasoning": "one short precise reason"
+}
+
+────────────────────────────────────
+EXAMPLES (FOR ACCURACY)
+────────────────────────────────────
+
+Input: "build a react login form"
+→ code
+
+Input: "write an email to manager"
+→ writer
+
+Input: "compare iPhone vs Samsung"
+→ analyst
+
+Input: "latest bitcoin price"
+→ research
+
+Input: "create a logo for my brand"
+→ image
+
+Input: "open chrome and delete temp file"
+→ computer
+
+Input: "what is photosynthesis"
+→ research
+
+Now classify the user message with maximum accuracy:
+"${message}"
+`;
 
     const raw = await completeChat({
       model: ROUTER_MODEL,

@@ -14,6 +14,7 @@ const VALID_AGENTS = [
   AGENT_IDS.GENERAL,
   AGENT_IDS.IMAGE,
   AGENT_IDS.COMPUTER,
+  AGENT_IDS.GENERATE_PROMPT,
 ];
 
 function regexRoute(message) {
@@ -29,6 +30,18 @@ function regexRoute(message) {
       reasoning: 'System command or folder/file automation keyword detected (Regex Fallback)' 
     };
   }
+  // ── 🧠 Prompt Engineering Agent ─────────────────────────────
+const promptPatterns =
+  /\b(prompt|improve prompt|optimize prompt|rewrite prompt|prompt engineering|generate prompt|create prompt|better prompt|system prompt|ai prompt|prompt engineer)\b/i;
+
+if (promptPatterns.test(lower)) {
+  return {
+    primaryAgent: AGENT_IDS.GENERATE_PROMPT,
+    needsSearch: false,
+    confidence: 0.95,
+    reasoning: 'Prompt engineering request detected (Regex Fallback)',
+  };
+}
 
   // ── 🟩 Image Asset Prompt Trigger Check ─────────────────────────────
   // Added to ensure the image pipeline functions even if the LLM fails

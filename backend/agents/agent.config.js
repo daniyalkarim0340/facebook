@@ -55,7 +55,7 @@ export const AGENT_IDS = {
   GENERAL: 'general',
   IMAGE: 'image',
   COMPUTER: 'computer',
-GERNATE_PRMOT:"prmot"
+ GERNATE_PRMOT:"prmot"
 };
 
 export const AGENTS = {

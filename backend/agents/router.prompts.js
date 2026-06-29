@@ -26,5 +26,5 @@ OUTPUT JSON ONLY:
   "needsSearch": false,
   "confidence": 0-1,
   "reasoning": "short reason"
-}`
+}`    
 };

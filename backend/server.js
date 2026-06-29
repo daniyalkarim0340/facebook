@@ -8,13 +8,18 @@ const PORT = process.env.PORT || 5000;
 connectDB()
     .then(() => {
 
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, () => {
             console.log(
                 chalk.black.bgGreen(
                     `Server is running on port ${PORT}`
                 )
             );
         });
+
+        // Set high timeout for AI processing (10 minutes)
+        server.timeout = 600000;
+        server.keepAliveTimeout = 600000;
+
     })
     .catch((error) => {
 

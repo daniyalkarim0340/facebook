@@ -12,7 +12,7 @@ export const handleAgentChat = asyncHandler(async (req, res, next) => {
   const userName = req.user.name || 'Daniyal'; 
 
   if (!message?.trim()) {
-    return next(new CustomError('A message content prompt is required.', 400));
+    return next(new CustomError(400, 'A message content prompt is required.'));
   }
 
   // 1. Fetch or initialize the session
@@ -20,7 +20,7 @@ export const handleAgentChat = asyncHandler(async (req, res, next) => {
   if (sessionId) {
     session = await ChatSession.findOne({ _id: sessionId, userId });
     if (!session) {
-      return next(new CustomError('No active conversation thread found matching that ID.', 404));
+      return next(new CustomError(404, 'No active conversation thread found matching that ID.'));
     }
   } else {
     session = await ChatSession.create({ userId, messages: [] });
@@ -57,7 +57,7 @@ export const handleAgentChat = asyncHandler(async (req, res, next) => {
       agentUsed: 'SystemGuardrail',
     });
     await session.save();
-    return next(new CustomError(`Agent Pipeline Error: ${pipelineError.message}`, 502));
+    return next(new CustomError(502, `Agent Pipeline Error: ${pipelineError.message}`));
   }
 
   const agentInfo = AGENTS[result.primaryAgent];
@@ -116,10 +116,10 @@ export const getAvailableAgents = asyncHandler(async (req, res) => {
 export const getSessionMessages = asyncHandler(async (req, res, next) => {
   const { sessionId } = req.params;
   const userId = req.user._id;
-  if (!sessionId) return next(new CustomError('Session ID is required.', 400));
+  if (!sessionId) return next(new CustomError(400, 'Session ID is required.'));
 
   const session = await ChatSession.findOne({ _id: sessionId, userId });
-  if (!session) return next(new CustomError('No conversation thread found matching that ID.', 404));
+  if (!session) return next(new CustomError(404, 'No conversation thread found matching that ID.'));
 
   res.status(200).json({
     status: 'success',
@@ -145,11 +145,11 @@ export const getUserChatHistory = asyncHandler(async (req, res) => {
 export const deleteUserChatSession = asyncHandler(async (req, res, next) => {
   const { sessionId } = req.params;
   const userId = req.user._id;
-  if (!sessionId) return next(new CustomError('A valid sessionId parameter must be provided.', 400));
+  if (!sessionId) return next(new CustomError(400, 'A valid sessionId parameter must be provided.'));
 
   const sessionToDelete = await ChatSession.findOneAndDelete({ _id: sessionId, userId });
   if (!sessionToDelete) {
-    return next(new CustomError('No conversation thread found matching that ID for this user.', 404));
+    return next(new CustomError(404, 'No conversation thread found matching that ID for this user.'));
   }
 
   res.status(200).json({

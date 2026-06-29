@@ -19,33 +19,13 @@ const app = express();
 app.use(express.json());
 
 // --------------------
-// ALLOWED ORIGINS
-// --------------------
-const alloworigin = [
-  "http://localhost:5173",
-  "https://facebookwebsite-frontend.onrender.com",
-];
-
-// --------------------
 // CORS CONFIG
 // --------------------
 const corsOptions = {
-  origin: function (origin, cb) {
-    // allow requests like Postman or server-to-server
-    if (!origin) return cb(null, true);
-
-    if (alloworigin.includes(origin)) {
-      return cb(null, true);
-    }
-
-    return cb(null, false); // block others
-  },
-
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-
+  origin: ["http://localhost:5173", "https://facebookwebsite-frontend.onrender.com"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
-
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 };
 
 // --------------------
@@ -53,21 +33,23 @@ const corsOptions = {
 // --------------------
 app.use(cors(corsOptions));
 
+
 // --------------------
 // RATE LIMITER
 // --------------------
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000, 
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-
+  skip: (req) => req.ip === '::1' || req.ip === '127.0.0.1' || req.hostname === 'localhost',
   handler: (req, res) => {
     res.status(429).json({
       message: "Too many requests, please try again later.",
     });
   },
 });
+
 
 app.use(limiter);
 

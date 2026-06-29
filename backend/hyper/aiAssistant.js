@@ -203,97 +203,113 @@ You are the intelligence layer between human language and system execution.
 
 export const executeComputerTask = async (userText, chatHistory = []) => {
     if (!userText) {
-        throw new CustomError("Message is required", 400);
+        throw new CustomError(400, "Message is required");
     }
 
-    const messages = [
-        { role: "system", content: MASTER_SYSTEM_PROMPT },
-        ...chatHistory,
-        { role: "user", content: userText }
-    ];
+    try {
+        const messages = [
+            { role: "system", content: MASTER_SYSTEM_PROMPT },
+            ...chatHistory,
+            { role: "user", content: userText }
+        ];
 
-    const response = await llmClient.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
-        messages: messages,
-        tools: [
-            {
-                type: "function",
-                function: {
-                    name: "performWindowsAction",
-                    description: "Deep Operating System Automation Controller. Reads/writes files, navigates directories, handles web, and stops apps.",
-                    parameters: {
-                        type: "object",
-                        properties: {
-                            action: {
-                                type: "string",
-                                enum: [
-                                    "open_app", 
-                                    "open_folder", 
-                                    "open_website", 
-                                    "list_directory", 
-                                    "create_folder",
-                                    "read_file", 
-                                    "write_file", 
-                                    "delete_file", 
-                                    "manage_process", 
-                                    "system"
-                                ]
-                            },
-                            target: { 
-                                type: "string", 
-                                description: "The primary item or path (e.g., 'C:\\\\Users\\\\Desktop\\\\ProjectNova', 'chrome', 'restart')." 
-                            },
-                            extraArgs: {
-                                type: "object",
-                                properties: {
-                                    fileContent: { type: "string", description: "The content payload required when executing a write_file action." },
-                                    processName: { type: "string", description: "The exact executable name required when actioning a manage_process 'kill' command (e.g., 'notepad.exe')." }
+        const response = await llmClient.chat.completions.create({
+            model: "llama-3.3-70b-versatile",
+            messages: messages,
+            tools: [
+                {
+                    type: "function",
+                    function: {
+                        name: "performWindowsAction",
+                        description: "Deep Operating System Automation Controller. Reads/writes files, navigates directories, handles web, and stops apps.",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                action: {
+                                    type: "string",
+                                    enum: [
+                                        "open_app", 
+                                        "open_folder", 
+                                        "open_website", 
+                                        "list_directory", 
+                                        "create_folder",
+                                        "read_file", 
+                                        "write_file", 
+                                        "delete_file", 
+                                        "manage_process", 
+                                        "system"
+                                    ]
+                                },
+                                target: { 
+                                    type: "string", 
+                                    description: "The primary item or path (e.g., 'C:\\\\Users\\\\Desktop\\\\ProjectNova', 'chrome', 'restart')." 
+                                },
+                                extraArgs: {
+                                    type: "object",
+                                    properties: {
+                                        fileContent: { type: "string", description: "The content payload required when executing a write_file action." },
+                                        processName: { type: "string", description: "The exact executable name required when actioning a manage_process 'kill' command (e.g., 'notepad.exe')." }
+                                    }
                                 }
-                            }
-                        },
-                        required: ["action", "target"]
+                            },
+                            required: ["action", "target"]
+                        }
                     }
                 }
+            ],
+            tool_choice: "auto"
+        });
+
+        const message = response.choices[0].message;
+
+        if (message.tool_calls) {
+            const toolCall = message.tool_calls[0];
+            const args = JSON.parse(toolCall.function.arguments);
+
+            messages.push(message);
+
+            // 🟩 SECURITY: passing arguments to the hardened execution engine
+            const resultJSON = await performWindowsAction(args.action, args.target, args.extraArgs);
+            let executionResult;
+            
+            try {
+                executionResult = typeof resultJSON === 'string' ? JSON.parse(resultJSON) : resultJSON;
+            } catch (pErr) {
+                executionResult = { success: false, error: "Malformed response from system engine" };
             }
-        ],
-        tool_choice: "auto"
-    });
+            
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                name: toolCall.function.name,
+                content: JSON.stringify(executionResult) 
+            });
 
-    const message = response.choices[0].message;
+            // Final summary generation
+            const finalResponse = await llmClient.chat.completions.create({
+                model: "llama-3.3-70b-versatile",
+                messages: messages
+            });
 
-    if (message.tool_calls) {
-        const toolCall = message.tool_calls[0];
-        const args = JSON.parse(toolCall.function.arguments);
-
-        messages.push(message);
-
-        // 🟩 FIXED: Now cleanly passing args.extraArgs down to your execution engine
-        const resultJSON = await performWindowsAction(args.action, args.target, args.extraArgs);
-        
-        messages.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            name: toolCall.function.name,
-            content: resultJSON 
-        });
-
-        // Final summary generation
-        const finalResponse = await llmClient.chat.completions.create({
-            model: "llama-3.3-70b-versatile",
-            messages: messages
-        });
+            return {
+                success: executionResult.success !== false,
+                tool: toolCall.function.name,
+                input: args,
+                execution_result: executionResult,
+                responseMessage: finalResponse.choices[0].message.content
+            };
+        }
 
         return {
             success: true,
-            tool: toolCall.function.name,
-            input: args,
-            execution_result: JSON.parse(resultJSON),
-            responseMessage: finalResponse.choices[0].message.content
+            responseMessage: message.content
+        };
+    } catch (error) {
+        console.error("AI Assistant Logic Crash:", error.message);
+        return {
+            success: false,
+            message: `The system gateway encountered a processing error: ${error.message}`,
+            responseMessage: "I encountered a technical failure while trying to access your system. Please check my connection or your local permissions."
         };
     }
-
-    return {
-        success: false,
-        responseMessage: message.content
-    };
-};
+};

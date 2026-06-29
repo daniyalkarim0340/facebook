@@ -5,83 +5,92 @@ import fs from "fs/promises";
 import path from "path";
 const execPromise = util.promisify(exec);
 
+/**
+ * 🛡️ Security Sanitization Engine
+ * Prevents command injection by stripping shell metacharacters.
+ */
+function sanitize(input) {
+    if (typeof input !== 'string') return '';
+    // Block meta-characters used for shell injection
+    return input.replace(/[&|;><$`!]/g, "").trim();
+}
+
 export default async function performWindowsAction(action, target, extraArgs = {}) {
-    console.log(`[OS Execution] Action: ${action} | Target: ${target}`, extraArgs);
+    const cleanTarget = sanitize(target);
+    console.log(`[OS Execution] Action: ${action} | Target: ${cleanTarget}`, extraArgs);
 
     try {
         switch (action) {
-            // ── 🌐 APPLICATION & WEB CONTROLS ────────────────────────────────
             case "open_app":
-                await execPromise(`start "" "${target}"`);
-                return JSON.stringify({ success: true, message: `Successfully opened app: ${target}` });
+                // 🛡️ Quoted and sanitized path
+                await execPromise(`start "" "${cleanTarget}"`);
+                return JSON.stringify({ success: true, message: `Successfully opened app: ${cleanTarget}` });
 
             case "open_website": {
-                const url = target.startsWith("http") ? target : `https://${target}.com`;
+                const url = cleanTarget.startsWith("http") ? cleanTarget : `https://${cleanTarget}.com`;
+                // 🛡️ Standardizing to use start with a sanitized URL
                 await execPromise(`start ${url}`);
                 return JSON.stringify({ success: true, message: `Successfully navigated to website: ${url}` });
             }
 
-            // ── 📂 ADVANCED FILE LAYER CONTROLS ──────────────────────────────
             case "open_folder":
-                await execPromise(`explorer "${target}"`);
-                return JSON.stringify({ success: true, message: `Successfully opened directory: ${target}` });
+                await execPromise(`explorer "${cleanTarget}"`);
+                return JSON.stringify({ success: true, message: `Successfully opened directory: ${cleanTarget}` });
 
             case "list_directory": {
-                const files = await fs.readdir(target);
-                return JSON.stringify({ success: true, target, files });
+                const files = await fs.readdir(cleanTarget);
+                return JSON.stringify({ success: true, target: cleanTarget, files });
             }
 
             case "read_file": {
-                const content = await fs.readFile(target, "utf-8");
-                return JSON.stringify({ success: true, filename: path.basename(target), content: content.slice(0, 5000) }); 
+                const content = await fs.readFile(cleanTarget, "utf-8");
+                return JSON.stringify({ success: true, filename: path.basename(cleanTarget), content: content.slice(0, 5000) }); 
             }
 
             case "write_file": {
-                const { fileContent } = extraArgs;
+                const fileContent = extraArgs.fileContent;
                 if (!fileContent) throw new Error("Missing fileContent parameter for write_file action.");
-                await fs.mkdir(path.dirname(target), { recursive: true });
-                await fs.writeFile(target, fileContent, "utf-8");
-                return JSON.stringify({ success: true, message: `Successfully written file to: ${target}` });
+                await fs.mkdir(path.dirname(cleanTarget), { recursive: true });
+                await fs.writeFile(cleanTarget, fileContent, "utf-8");
+                return JSON.stringify({ success: true, message: `Successfully written file to: ${cleanTarget}` });
             }
 
             case "delete_file":
-                await fs.rm(target, { force: true, recursive: true });
-                return JSON.stringify({ success: true, message: `Permanently deleted: ${target}` });
+                await fs.rm(cleanTarget, { force: true, recursive: true });
+                return JSON.stringify({ success: true, message: `Permanently deleted: ${cleanTarget}` });
 
-            // ── ⚙️ OS PROCESS & SYSTEM LEVEL CONTROLS ──────────────────────────
             case "manage_process":
-                if (target === "list") {
+                if (cleanTarget === "list") {
                     const { stdout } = await execPromise("tasklist");
                     return JSON.stringify({ success: true, processes: stdout.slice(0, 8000) });
                 }
-                if (target === "kill") {
-                    const { processName } = extraArgs;
+                if (cleanTarget === "kill") {
+                    const processName = sanitize(extraArgs.processName);
                     if (!processName) throw new Error("Missing processName parameter.");
+                    // Ensure the process name doesn't contain malicious segments
                     await execPromise(`taskkill /IM "${processName}" /F`);
                     return JSON.stringify({ success: true, message: `Force terminated process: ${processName}` });
                 }
-                throw new Error(`Unknown process action sub-type: ${target}`);
+                throw new Error(`Unknown process action sub-type: ${cleanTarget}`);
 
-            // ── 📁 DIRECTORY STRUCTURING CONTROLS ─────────────────────────────
             case "create_folder":
-                // Directly runs recursive directory creation on the targeted path string
-                await fs.mkdir(target, { recursive: true });
-                return JSON.stringify({ success: true, message: `Successfully created folder at: ${target}` });
+                await fs.mkdir(cleanTarget, { recursive: true });
+                return JSON.stringify({ success: true, message: `Successfully created folder at: ${cleanTarget}` });
 
             case "system":
-                if (target === "lock") {
+                if (cleanTarget === "lock") {
                     await execPromise("rundll32.exe user32.dll,LockWorkStation");
                     return JSON.stringify({ success: true, message: "PC locked successfully." });
                 }
-                if (target === "restart") {
+                if (cleanTarget === "restart") {
                     await execPromise("shutdown /r /t 0");
                     return JSON.stringify({ success: true, message: "PC restart sequence initiated." });
                 }
-                if (target === "shutdown") {
+                if (cleanTarget === "shutdown") {
                     await execPromise("shutdown /s /t 0");
                     return JSON.stringify({ success: true, message: "PC shutdown sequence initiated." });
                 }
-                throw new Error(`Unknown system action: ${target}`);
+                throw new Error(`Unknown system action: ${cleanTarget}`);
 
             default:
                 throw new Error(`Unsupported action type: ${action}`);
@@ -90,4 +99,4 @@ export default async function performWindowsAction(action, target, extraArgs = {
         console.error(`[OS Error] Failed executing ${action}:`, error.message);
         return JSON.stringify({ success: false, error: error.message });
     }
-}
+}

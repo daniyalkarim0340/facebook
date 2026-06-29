@@ -1,10 +1,11 @@
-class CustomError extends Error{
-constructor(statuscode , message){
-super(message);
-this.statuscode=statuscode;
-}  
+class CustomError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
 }
 export default CustomError;
+
 
 
 

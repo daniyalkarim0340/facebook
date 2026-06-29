@@ -44,15 +44,14 @@ export async function runMultiAgentPipeline({
 
   // ── 💻 Computer Agent Interception ──────────────────────
   const computerTriggers = [
-    'open', 'start', 'launch', 'run', 'execute', 'boot', 'bring up',
-    'close', 'kill', 'stop', 'terminate', 'end task', 'force quit', 'exit', 'quit',
-    'go to', 'open website', 'browse', 'navigate to', 'visit', 'search for', 'look up', 'google',
-    'make', 'create', 'build', 'spawn', 'new folder', 'new file', 'generate file', 'generate folder',
-    'write', 'save', 'update', 'append', 'edit', 'modify', 'change content',
-    'delete', 'remove', 'trash', 'wipe', 'clear', 'erase', 'destroy',
-    'read', 'view', 'show', 'display', 'list', 'show files', 'look inside', 'check folder', 'directory', 'dir',
-    'restart', 'reboot', 'shutdown', 'turn off', 'power off', 'lock', 'sleep', 'hibernate', 'log out', 'sign out',
-    'tasklist', 'active tasks', 'running apps', 'processes'
+    'open app', 'launch app', 'start app', 'open program', 'launch program',
+    'open website', 'navigate to', 'open browser',
+    'new folder', 'new file', 'create folder', 'create file', 'generate file', 'generate folder',
+    'shutdown pc', 'restart pc', 'reboot pc', 'turn off pc', 'power off pc',
+    'lock pc', 'lock computer', 'hibernate', 'log out of pc', 'sign out of pc',
+    'show files', 'list files', 'check folder', 'look inside folder',
+    'force quit', 'end task', 'kill process', 'terminate process', 'tasklist',
+    'active tasks', 'running apps', 'running processes',
   ];
 
   const isComputerRequest = route.primaryAgent === AGENT_IDS.COMPUTER || 

@@ -4,7 +4,7 @@ import CustomError from '../handler/customerror.js';
 import cloudinary from '../config/cloudinary.js';
 import { ChatSession } from '../model/ai.model.js';
 
-const GROQ_API_KEY = process.env.GROQ;
+const GROQ_API_KEY = process.env.GROQ_API_KEY || process.env.GROQ;
 
 /**
  * Helper utility to convert a Node.js memory buffer directly into a Cloudinary upload stream
@@ -91,6 +91,9 @@ export const understandImage = asyncHandler(async (req, res, next) => {
   if (!req.file) return next(new CustomError(400, 'Please upload an image file via form-data'));
   if (!GROQ_API_KEY) return next(new CustomError(500, 'Groq API Key missing from environment'));
 
+  const optionalPrompt = String(req.body.prompt || '').trim();
+  const promptText = optionalPrompt || 'Describe this image concisely for a social media feed caption.';
+
   try {
     const base64Image = req.file.buffer.toString('base64');
     const mimeType = req.file.mimetype;
@@ -98,14 +101,14 @@ export const understandImage = asyncHandler(async (req, res, next) => {
     const groqResponse = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
       {
-        model: "meta-llama/llama-4-scout-17b-16e-instruct",
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         messages: [
           {
-            role: "user",
+            role: 'user',
             content: [
-              { type: "text", text: "Describe this image concisely for a social media feed caption." },
+              { type: 'text', text: promptText },
               {
-                type: "image_url",
+                type: 'image_url',
                 image_url: { url: `data:${mimeType};base64,${base64Image}` }
               }
             ]
@@ -114,23 +117,30 @@ export const understandImage = asyncHandler(async (req, res, next) => {
       },
       {
         headers: {
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          Authorization: `Bearer ${GROQ_API_KEY}`,
           'Content-Type': 'application/json'
         }
       }
     );
 
-    const caption = groqResponse.data.choices[0]?.message?.content || 'No text description generated.';
+    const caption =
+      groqResponse.data?.choices?.[0]?.message?.content ||
+      'No text description generated.';
+
     const cloudinaryResult = await streamUploadToCloudinary(req.file.buffer, 'user_uploads');
 
     return res.status(200).json({
       success: true,
       description: caption,
-      savedUrl: cloudinaryResult.secure_url
+      savedUrl: cloudinaryResult.secure_url,
+      prompt: promptText
     });
-
   } catch (error) {
-    const errorMessage = error.response?.data?.error?.message || error.message;
+    const errorMessage =
+      error.response?.data?.error?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      'Unknown Vision Processing Error';
     return next(new CustomError(500, `Vision Processing Failed: ${errorMessage}`));
   }
 });

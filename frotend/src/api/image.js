@@ -9,11 +9,7 @@ export const aiService = {
 
   // 👁️ Send Image to Groq for Caption/Understanding (Expects Form-Data)
   understandImage: async (formData) => {
-    const response = await api.post('ai/understand-image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data', // Crucial for file uploads
-      },
-    });
+    const response = await api.post('ai/understand-image', formData);
     return response.data;
   },
 };

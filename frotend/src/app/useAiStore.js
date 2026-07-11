@@ -30,14 +30,17 @@ export const useAiStore = create((set) => ({
   },
 
   // 👁️ Action: Upload Local Device File to Groq Vision
-  understandImageAction: async (file) => {
+  understandImageAction: async (file, prompt = '') => {
     set({ isAnalyzing: true, error: null });
     try {
       const formData = new FormData();
-      formData.append('image', file); 
+      formData.append('image', file);
+      if (prompt?.trim()) {
+        formData.append('prompt', prompt.trim());
+      }
 
       const data = await aiService.understandImage(formData);
-      
+
       set({ 
         imageDescription: data.description, 
         isAnalyzing: false 
@@ -45,7 +48,7 @@ export const useAiStore = create((set) => ({
       
       return data;
     } catch (err) {
-      const errMsg = err.response?.data?.message || 'Failed to analyze image';
+      const errMsg = err.response?.data?.message || err.message || 'Failed to analyze image';
       set({ error: errMsg, isAnalyzing: false });
       throw err;
     }

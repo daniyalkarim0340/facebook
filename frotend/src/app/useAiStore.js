@@ -7,6 +7,8 @@ export const useAiStore = create((set) => ({
   imageDescription: '',      // Stores the latest text explanation from Groq Vision
   isGenerating: false,       // Loading flag specifically for image creation
   isAnalyzing: false,        // Loading flag specifically for vision processing
+  uploadProgress: 0,         // Percentage progress for image upload
+  uploadStatusText: '',      // Human-readable upload status text
   error: null,               // Holds error messages to present in the UI
 
   // 🎨 Action: Trigger Pollinations Generation & Cloudinary Sync
@@ -31,7 +33,13 @@ export const useAiStore = create((set) => ({
 
   // 👁️ Action: Upload Local Device File to Groq Vision
   understandImageAction: async (file, prompt = '') => {
-    set({ isAnalyzing: true, error: null });
+    set({
+      isAnalyzing: true,
+      uploadProgress: 0,
+      uploadStatusText: 'Uploading image 1 of 1...',
+      error: null,
+    });
+
     try {
       const formData = new FormData();
       formData.append('image', file);
@@ -39,18 +47,24 @@ export const useAiStore = create((set) => ({
         formData.append('prompt', prompt.trim());
       }
 
-      const data = await aiService.understandImage(formData);
+      const data = await aiService.understandImage(formData, (progressEvent) => {
+        if (progressEvent.lengthComputable) {
+          const percentComplete = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+          set({ uploadProgress: percentComplete });
+        }
+      });
 
       set({ 
-        imageDescription: data.description, 
-        isAnalyzing: false 
+        imageDescription: data.description,
+        isAnalyzing: false,
+        uploadProgress: 100,
+        uploadStatusText: 'Analyzing uploaded image...',
       });
-      
+
       return data;
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message || 'Failed to analyze image';
-      set({ error: errMsg, isAnalyzing: false });
-      throw err;
+      set({ error: errMsg, isAnalyzing: false, uploadProgress: 0, uploadStatusText: '' });
     }
   },
 

@@ -64,6 +64,11 @@ export default function ChatDashboard() {
   // Vision store selectors for analyzing images
   const understandImageAction = useAiStore((state) => state.understandImageAction);
   const isAnalyzing = useAiStore((state) => state.isAnalyzing);
+  const uploadProgress = useAiStore((state) => state.uploadProgress);
+  const uploadStatusText = useAiStore((state) => state.uploadStatusText);
+
+  // Image upload count for the chat UI
+  const uploadedImageCount = messages.filter((msg) => msg.isImage).length;
 
   const loadingStatusText = agentStatus && agentStatus !== 'Idle'
     ? agentStatus
@@ -298,6 +303,10 @@ export default function ChatDashboard() {
           darkMode={darkMode}
           loading={loading}
           loadingStatusText={loadingStatusText}
+          isAnalyzing={isAnalyzing}
+          uploadProgress={uploadProgress}
+          uploadStatusText={uploadStatusText}
+          imageCount={uploadedImageCount}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onToggleTheme={() => setDarkMode(!darkMode)}
         />

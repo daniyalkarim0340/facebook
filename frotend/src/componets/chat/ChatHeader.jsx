@@ -6,11 +6,15 @@ export default function ChatHeader({
   darkMode,
   loading,
   loadingStatusText,
+  imageCount = 0,
+  isAnalyzing = false,
+  uploadProgress = 0,
+  uploadStatusText = '',
   onToggleSidebar,
   onToggleTheme,
 }) {
   return (
-    <header className="h-16 flex items-center px-4 md:px-8 flex-shrink-0 justify-between z-30">
+    <header className="h-20 flex flex-col justify-end px-4 md:px-8 flex-shrink-0 z-30">
       <motion.div
         variants={slideFromLeft(0.05)}
         initial="hidden"
@@ -57,7 +61,7 @@ export default function ChatHeader({
         variants={slideFromRight(0.12)}
         initial="hidden"
         animate="visible"
-        className="text-xs font-medium tracking-wide"
+        className="text-xs font-medium tracking-wide text-right space-y-1"
       >
         <AnimatePresence mode="wait">
           {loading && (
@@ -67,13 +71,42 @@ export default function ChatHeader({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -12 }}
               transition={{ delay: 0.08 }}
-              className={`flex items-center gap-2 ${darkMode ? 'text-amber-400/90' : 'text-amber-600'}`}
+              className={`flex items-center justify-end gap-2 ${darkMode ? 'text-amber-400/90' : 'text-amber-600'}`}
             >
               <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ animationDelay: '0.15s' }} />
               <span className="italic shimmer-text">{loadingStatusText}</span>
             </motion.span>
           )}
         </AnimatePresence>
+
+        {isAnalyzing && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`space-y-1 ${darkMode ? 'text-zinc-300' : 'text-zinc-500'}`}
+          >
+            <div className="flex items-center justify-end gap-2 text-[11px]">
+              <span>{uploadStatusText || 'Uploading image...'}</span>
+              <span className="font-semibold">{uploadProgress}%</span>
+            </div>
+            <div className="h-1 w-full max-w-[200px] rounded-full overflow-hidden bg-zinc-300/30">
+              <div
+                className="h-full rounded-full bg-amber-500 transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {imageCount > 0 && !isAnalyzing && (
+          <motion.span
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`block ${darkMode ? 'text-zinc-300' : 'text-zinc-500'}`}
+          >
+            Uploaded images: {imageCount}
+          </motion.span>
+        )}
       </motion.div>
     </header>
   );

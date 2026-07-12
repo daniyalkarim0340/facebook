@@ -1,9 +1,5 @@
-import { Groq } from 'groq-sdk';
-
-// Initialize Groq (ensure GROQ_API_KEY is in your .env file)
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY, 
-});
+import { runMultiAgentPipeline } from '../agents/agent.orchestrator.js';
+import { AGENT_IDS } from '../agents/agent.config.js';
 
 export const handleVoiceChat = async (req, res) => {
     const { transcribedText } = req.body;
@@ -12,47 +8,29 @@ export const handleVoiceChat = async (req, res) => {
         return res.status(400).json({ error: "transcribedText is required" });
     }
 
-    // Set HTTP headers to keep the connection open and stream chunks
-    res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
     try {
-        const stream = await groq.chat.completions.create({
-            model: 'llama-3.3-70b-versatile',
-            messages: [
-                { 
-                    role: 'system', 
-                    content: 'You are a helpful, conversational AI voice assistant. Keep answers concise, natural, and easy to speak out loud. Do not use markdown formatting.' 
-                },
-                { 
-                    role: 'user', 
-                    content: transcribedText 
-                }
-            ],
-            stream: true,
-            temperature: 0.7,
+        const result = await runMultiAgentPipeline({
+            message: transcribedText,
+            forcedAgent: AGENT_IDS.VOICE,
+            userName: 'Voice User',
         });
 
-        // Loop through the Groq stream and push chunks to the client immediately
-        for await (const chunk of stream) {
-            const textChunk = chunk.choices[0]?.delta?.content || '';
-            if (textChunk) {
-                res.write(textChunk); 
-            }
-        }
+        const responseText = typeof result.response === 'string'
+            ? result.response
+            : JSON.stringify(result.response);
 
-        // Close the connection once the LLM finishes speaking
-        res.end(); 
-
+        res.write(responseText);
+        res.end();
     } catch (error) {
-        console.error("Groq processing failed:", error);
-        
-        // Only send an error status if we haven't already started streaming data
+        console.error("Voice agent pipeline failed:", error);
         if (!res.headersSent) {
-            res.status(500).json({ error: "Failed to generate AI response" });
+            res.status(500).json({ error: "Failed to generate voice agent response" });
         } else {
-            res.end(); 
+            res.end();
         }
     }
 };

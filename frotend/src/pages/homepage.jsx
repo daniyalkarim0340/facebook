@@ -4,6 +4,7 @@ import useChatStore from '../app/usechat.store';
 import useAuthStore from '../app/datastore';
 import { useAiStore } from '../app/useAiStore'; 
 import { useTextToSpeech } from '../hook/voice';
+import VoiceCall from '../VoiceCall';
 import ChatBackground from '../componets/chat/ChatBackground';
 import ChatSidebar from '../componets/chat/ChatSidebar';
 import ChatHeader from '../componets/chat/ChatHeader';
@@ -30,6 +31,7 @@ export default function ChatDashboard() {
 
   // UI State
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [voiceCallOpen, setVoiceCallOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
@@ -309,7 +311,15 @@ export default function ChatDashboard() {
           imageCount={uploadedImageCount}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onToggleTheme={() => setDarkMode(!darkMode)}
+          onToggleVoiceCall={() => setVoiceCallOpen((open) => !open)}
+          voiceCallOpen={voiceCallOpen}
         />
+
+        {voiceCallOpen && (
+          <div className="px-4 sm:px-6 lg:px-8 xl:px-16 pb-4">
+            <VoiceCall darkMode={darkMode} />
+          </div>
+        )}
 
         <main className="flex-1 min-h-0 overflow-y-auto w-full px-4 sm:px-6 lg:px-8 xl:px-16 flex justify-center scroll-smooth">
           <div className="w-full max-w-4xl xl:max-w-5xl flex flex-col">

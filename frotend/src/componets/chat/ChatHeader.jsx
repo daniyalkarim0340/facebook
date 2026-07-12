@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Sun, Moon, Loader2 } from 'lucide-react';
+import { Menu, Sun, Moon, Mic2, Loader2 } from 'lucide-react';
 import { slideFromLeft, slideFromRight } from './chatAnimations';
 
 export default function ChatHeader({
@@ -12,6 +12,8 @@ export default function ChatHeader({
   uploadStatusText = '',
   onToggleSidebar,
   onToggleTheme,
+  onToggleVoiceCall,
+  voiceCallOpen = false,
 }) {
   return (
     <header className="h-20 flex flex-col justify-end px-4 md:px-8 flex-shrink-0 z-30">
@@ -54,6 +56,20 @@ export default function ChatHeader({
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </motion.span>
           </AnimatePresence>
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onToggleVoiceCall}
+          className={`p-2.5 border rounded-xl transition-all shadow-xs flex items-center justify-center ${
+            darkMode
+              ? 'bg-zinc-900 border-zinc-800 text-cyan-400 hover:bg-zinc-800'
+              : 'bg-white border-zinc-200 text-cyan-600 hover:bg-zinc-50'
+          }`}
+          title={voiceCallOpen ? 'Close voice call' : 'Open voice call'}
+        >
+          <Mic2 className="w-4 h-4" />
         </motion.button>
       </motion.div>
 

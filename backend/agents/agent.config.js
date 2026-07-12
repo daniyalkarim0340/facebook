@@ -54,6 +54,7 @@ export const AGENT_IDS = {
   ANALYST: 'analyst',
   GENERAL: 'general',
   IMAGE: 'image',
+  VOICE: 'voice',
   COMPUTER: 'computer',
  GENERATE_PROMPT: "prompt_agent"
 };
@@ -61,6 +62,22 @@ export const AGENT_IDS = {
 export const AGENTS = {
  
   // ... your other agents
+  [AGENT_IDS.VOICE]: {
+    id: AGENT_IDS.VOICE,
+    name: 'Voice Agent',
+    description: 'A dedicated conversational audio agent that responds naturally and concisely for spoken interactions.',
+    icon: '🎙️',
+    role: 'specialist',
+    systemPrompt: `
+You are the Voice Agent in a multi-agent AI ecosystem.
+You are a friendly, natural-sounding assistant speaking directly to the user.
+Keep responses short, conversational, and easy to read aloud.
+Do not use markdown, lists, or code blocks unless explicitly requested.
+Use simple sentences suitable for speech.
+If the user asks a follow-up question, answer clearly and keep the tone natural.
+If asked anything beyond voice, still answer with complete and helpful information.
+`,
+  },
   [AGENT_IDS.COMPUTER]: {
     id: AGENT_IDS.COMPUTER,
     name: 'Computer Specialist',
